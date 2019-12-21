@@ -1,0 +1,30 @@
+{
+  "name": "elm-avl-tree",
+  "version": "1.0.0",
+  "description": "AVL Tree Elm",
+  "main": "index.js",
+  "scripts": {
+    "test": "elm-test --compiler ./node_modules/.bin/elm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owanturist/elm-avl-tree.git"
+  },
+  "keywords": [
+    "elm",
+    "avl",
+    "binary tree"
+  ],
+  "author": "Anton Ovechkin <owanturist@gmail.com>",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/owanturist/elm-avl-tree/issues"
+  },
+  "homepage": "https://github.com/owanturist/elm-avl-tree#readme",
+  "devDependencies": {
+    "elm": "^0.19.1-3",
+    "elm-analyse": "^0.16.5",
+    "elm-format": "^0.8.2",
+    "elm-test": "^0.19.1-revision2"
+  }
+}
