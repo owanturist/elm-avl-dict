@@ -9,13 +9,54 @@ import Test exposing (Test, describe, fuzz, fuzz2, fuzz3, test)
 
 
 validate : (key -> String) -> AVL key value -> Result String (AVL key value)
-validate stringify ((AVL _ root) as avl) =
-    Result.map (always avl) (validateHelp stringify root)
+validate keyToString ((AVL _ root) as avl) =
+    Result.map (always avl) (validateHelp keyToString root)
+
+
+draw : (key -> String) -> (value -> String) -> AVL key value -> String
+draw keyToString valueToString (AVL _ root) =
+    String.join "\n" (drawHelp keyToString valueToString root)
+
+
+shiftLeft : List String -> List String
+shiftLeft lines =
+    case lines of
+        [] ->
+            []
+
+        first :: rest ->
+            "| | "
+                :: ("| +-" ++ first)
+                :: List.map ((++) "|   ") rest
+
+
+shiftRight : List String -> List String
+shiftRight lines =
+    case lines of
+        [] ->
+            []
+
+        first :: rest ->
+            "|   "
+                :: ("+---" ++ first)
+                :: List.map ((++) "    ") rest
+
+
+drawHelp : (key -> String) -> (value -> String) -> Node key value -> List String
+drawHelp keyToString valueToString node =
+    case node of
+        RBEmpty_elm_builtin ->
+            [ "Null" ]
+
+        RBNode_elm_builtin height key value left right ->
+            ("height: " ++ String.fromInt height ++ ", key: " ++ keyToString key ++ ", value: " ++ valueToString value)
+                :: shiftLeft (drawHelp keyToString valueToString left)
+                ++ shiftRight (drawHelp keyToString valueToString right)
 
 
 expectValid : (key -> String) -> AVL key value -> Expectation
-expectValid stringify avl =
-    case validate stringify avl of
+expectValid keyToString avl =
+    case validate keyToString avl of
         Err error ->
             Expect.fail error
 
@@ -24,7 +65,7 @@ expectValid stringify avl =
 
 
 validateHelp : (key -> String) -> Node key value -> Result String Int
-validateHelp stringify node =
+validateHelp keyToString node =
     case node of
         RBEmpty_elm_builtin ->
             Ok 0
@@ -32,15 +73,15 @@ validateHelp stringify node =
         RBNode_elm_builtin _ key _ left right ->
             Result.andThen
                 (\( lh, rh ) ->
-                    if abs (lh - rh) <= 1 then
-                        Ok (1 + max lh rh)
+                    if abs (lh - rh) > 1 then
+                        Err ("height diff [" ++ keyToString key ++ "]: " ++ String.fromInt lh ++ " vs " ++ String.fromInt rh)
 
                     else
-                        Err ("height diff [" ++ stringify key ++ "]: " ++ String.fromInt lh ++ " vs " ++ String.fromInt rh)
+                        Ok (1 + max lh rh)
                 )
                 (Result.map2 Tuple.pair
-                    (validateHelp stringify left)
-                    (validateHelp stringify right)
+                    (validateHelp keyToString left)
+                    (validateHelp keyToString right)
                 )
 
 
@@ -121,19 +162,16 @@ insertSuite =
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.intRange -2000 -1000) (Fuzz.intRange 1000 2000) "ascending keys" <|
+        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "ascending keys" <|
             \lo hi ->
                 List.range lo hi
                     |> List.foldr
-                        (\i ->
-                            Result.andThen
-                                (validate String.fromInt << AVL.insert i (String.fromInt i))
-                        )
+                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
                         (Ok AVL.empty)
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.intRange -2000 -1000) (Fuzz.intRange 1000 2000) "descending keys" <|
+        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "descending keys" <|
             \lo hi ->
                 List.range lo hi
                     |> List.foldl
@@ -142,14 +180,11 @@ insertSuite =
                     |> Expect.ok
 
         --
-        , fuzz (Fuzz.list (Fuzz.intRange -2000 2000)) "random keys" <|
+        , fuzz (Fuzz.list (Fuzz.intRange -200 200)) "random keys" <|
             \list ->
                 list
                     |> List.foldl
-                        (\i ->
-                            Result.andThen
-                                (validate String.fromInt << AVL.insert i (String.fromInt i))
-                        )
+                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
                         (Ok AVL.empty)
                     |> Expect.ok
         ]

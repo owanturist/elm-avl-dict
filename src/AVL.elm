@@ -66,6 +66,22 @@ c key value left right =
     RBNode_elm_builtin (1 + max (h left) (h right)) key value left right
 
 
+diff : Node key value -> Node key value -> Order
+diff left right =
+    let
+        d =
+            h left - h right
+    in
+    if d < -1 then
+        LT
+
+    else if d > 1 then
+        GT
+
+    else
+        EQ
+
+
 
 -- C O N S T R U C T I O N
 
@@ -95,10 +111,10 @@ fromList keyValues =
 fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
 fromListHelper ( key, value ) ( count, node ) =
     let
-        ( added, nextRoot ) =
+        ( modified, nextRoot ) =
             insertHelp key value node
     in
-    if added then
+    if modified then
         ( count + 1, nextRoot )
 
     else
@@ -113,10 +129,10 @@ fromListHelper ( key, value ) ( count, node ) =
 insert : comparable -> value -> AVL comparable value -> AVL comparable value
 insert key value (Internal.AVL count root) =
     let
-        ( added, nextRoot ) =
+        ( modified, nextRoot ) =
             insertHelp key value root
     in
-    if added then
+    if modified then
         Internal.AVL (count + 1) nextRoot
 
     else
@@ -130,33 +146,76 @@ insertHelp key value node =
             ( True, s key value )
 
         RBNode_elm_builtin height k v left right ->
-            case ( compare key k, left, right ) of
-                ( LT, RBEmpty_elm_builtin, _ ) ->
-                    ( True
-                    , c k v (s key value) right
-                    )
+            case compare key k of
+                LT ->
+                    case insertHelp key value left of
+                        ( False, nextLeft ) ->
+                            ( False
+                            , RBNode_elm_builtin height k v nextLeft right
+                            )
 
-                ( LT, RBNode_elm_builtin _ lk lv ll lr, RBEmpty_elm_builtin ) ->
-                    ( True
-                    , c lk lv (s key value) (s k v)
-                    )
+                        ( True, nextLeft ) ->
+                            ( True
+                            , balance k v nextLeft right
+                            )
 
-                ( LT, _, RBNode_elm_builtin _ rk rv rl rr ) ->
-                    let
-                        ( added, nextLeft ) =
-                            insertHelp key value left
-                    in
-                    ( added
-                    , Debug.todo ""
-                    )
+                GT ->
+                    case insertHelp key value right of
+                        ( False, nextRight ) ->
+                            ( False
+                            , RBNode_elm_builtin height k v left nextRight
+                            )
 
-                ( GT, _, _ ) ->
-                    Debug.todo ""
+                        ( True, nextRight ) ->
+                            ( True
+                            , balance k v left nextRight
+                            )
 
-                ( EQ, _, _ ) ->
+                EQ ->
                     ( False
                     , RBNode_elm_builtin height key value left right
                     )
+
+
+balance : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+balance key value left right =
+    case diff left right of
+        LT ->
+            rotateLeft key value left right
+
+        GT ->
+            rotateRight key value left right
+
+        EQ ->
+            c key value left right
+
+
+rotateLeft : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateLeft key value left right =
+    case right of
+        RBEmpty_elm_builtin ->
+            c key value left right
+
+        RBNode_elm_builtin _ k v l r ->
+            if h l > h r then
+                rotateLeft key value left (rotateRight k v l r)
+
+            else
+                c k v (c key value left l) r
+
+
+rotateRight : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateRight key value left right =
+    case left of
+        RBEmpty_elm_builtin ->
+            c key value left right
+
+        RBNode_elm_builtin _ k v l r ->
+            if h l < h r then
+                rotateRight key value (rotateLeft k v l r) right
+
+            else
+                c k v l (c key value r right)
 
 
 
