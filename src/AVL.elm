@@ -149,55 +149,40 @@ insertHelp key value node =
             case compare key k of
                 LT ->
                     case insertHelp key value left of
-                        ( False, nextLeft ) ->
+                        ( True, (RBNode_elm_builtin lh lk lv ll lr) as nextLeft ) ->
+                            ( True
+                            , if lh - h right > 1 then
+                                rotateRight k v right lk lv ll lr
+
+                              else
+                                c k v nextLeft right
+                            )
+
+                        ( _, nextLeft ) ->
                             ( False
                             , RBNode_elm_builtin height k v nextLeft right
                             )
 
-                        ( True, nextLeft ) ->
-                            ( True
-                            , balance k v nextLeft right
-                            )
-
                 GT ->
                     case insertHelp key value right of
-                        ( False, nextRight ) ->
-                            ( False
-                            , RBNode_elm_builtin height k v left nextRight
+                        ( True, (RBNode_elm_builtin rh rk rv rl rr) as nextRight ) ->
+                            ( True
+                            , if h left - rh < -1 then
+                                rotateLeft k v left rk rv rl rr
+
+                              else
+                                c k v left nextRight
                             )
 
-                        ( True, nextRight ) ->
-                            ( True
-                            , balance k v left nextRight
+                        ( _, nextRight ) ->
+                            ( False
+                            , RBNode_elm_builtin height k v left nextRight
                             )
 
                 EQ ->
                     ( False
                     , RBNode_elm_builtin height key value left right
                     )
-
-
-balance : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-balance pk pv pl pr =
-    case ( pl, pr ) of
-        ( RBEmpty_elm_builtin, RBNode_elm_builtin 2 rk rv rl rr ) ->
-            rotateLeft pk pv pl rk rv rl rr
-
-        ( RBNode_elm_builtin 2 lk lv ll lr, RBEmpty_elm_builtin ) ->
-            rotateRight pk pv pr lk lv ll lr
-
-        ( RBNode_elm_builtin lh lk lv ll lr, RBNode_elm_builtin rh rk rv rl rr ) ->
-            if lh - rh < -1 then
-                rotateLeft pk pv pl rk rv rl rr
-
-            else if lh - rh > 1 then
-                rotateRight pk pv pr lk lv ll lr
-
-            else
-                c pk pv pl pr
-
-        _ ->
-            c pk pv pl pr
 
 
 rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
