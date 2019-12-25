@@ -178,44 +178,54 @@ insertHelp key value node =
 
 
 balance : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-balance key value left right =
-    case diff left right of
-        LT ->
-            rotateLeft key value left right
+balance pk pv pl pr =
+    case ( pl, pr ) of
+        ( RBEmpty_elm_builtin, RBNode_elm_builtin 2 rk rv rl rr ) ->
+            rotateLeft pk pv pl rk rv rl rr
 
-        GT ->
-            rotateRight key value left right
+        ( RBNode_elm_builtin 2 lk lv ll lr, RBEmpty_elm_builtin ) ->
+            rotateRight pk pv pr lk lv ll lr
 
-        EQ ->
-            c key value left right
+        ( RBNode_elm_builtin lh lk lv ll lr, RBNode_elm_builtin rh rk rv rl rr ) ->
+            if lh - rh < -1 then
+                rotateLeft pk pv pl rk rv rl rr
 
-
-rotateLeft : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-rotateLeft key value left right =
-    case right of
-        RBEmpty_elm_builtin ->
-            c key value left right
-
-        RBNode_elm_builtin _ k v l r ->
-            if h l > h r then
-                rotateLeft key value left (rotateRight k v l r)
+            else if lh - rh > 1 then
+                rotateRight pk pv pr lk lv ll lr
 
             else
-                c k v (c key value left l) r
+                c pk pv pl pr
+
+        _ ->
+            c pk pv pl pr
 
 
-rotateRight : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-rotateRight key value left right =
-    case left of
-        RBEmpty_elm_builtin ->
-            c key value left right
-
-        RBNode_elm_builtin _ k v l r ->
-            if h l < h r then
-                rotateRight key value (rotateLeft k v l r) right
+rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateLeft pk pv pl rk rv rl rr =
+    case rl of
+        RBNode_elm_builtin lh lk lv ll lr ->
+            if lh > h rr then
+                c lk lv (c pk pv pl ll) (c rk rv lr rr)
 
             else
-                c k v l (c key value r right)
+                c rk rv (c pk pv pl rl) rr
+
+        _ ->
+            c rk rv (c pk pv pl rl) rr
+
+
+rotateRight : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateRight pk pv pr lk lv ll lr =
+    case lr of
+        RBNode_elm_builtin rh rk rv rl rr ->
+            if h ll < rh then
+                c rk rv (c lk lv ll rl) (c pk pv rr pr)
+
+            else
+                c lk lv ll (c pk pv lr pr)
+
+        _ ->
+            c lk lv ll (c pk pv lr pr)
 
 
 
