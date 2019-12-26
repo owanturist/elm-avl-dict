@@ -8,11 +8,6 @@ import List.Extra
 import Test exposing (Test, describe, fuzz, fuzz2, fuzz3, test)
 
 
-validate : (key -> String) -> AVL key value -> Result String (AVL key value)
-validate keyToString ((AVL _ root) as avl) =
-    Result.map (always avl) (validateHelp keyToString root)
-
-
 draw : (key -> String) -> (value -> String) -> AVL key value -> String
 draw keyToString valueToString (AVL _ root) =
     String.join "\n" (drawHelp keyToString valueToString root)
@@ -64,6 +59,11 @@ expectValid keyToString avl =
             Expect.pass
 
 
+validate : (key -> String) -> AVL key value -> Result String (AVL key value)
+validate keyToString ((AVL _ root) as avl) =
+    Result.map (always avl) (validateHelp keyToString root)
+
+
 validateHelp : (key -> String) -> Node key value -> Result String Int
 validateHelp keyToString node =
     case node of
@@ -83,6 +83,21 @@ validateHelp keyToString node =
                     (validateHelp keyToString left)
                     (validateHelp keyToString right)
                 )
+
+
+size : AVL key value -> Int
+size (AVL _ root) =
+    sizeHelp root
+
+
+sizeHelp : Node key value -> Int
+sizeHelp node =
+    case node of
+        RBEmpty_elm_builtin ->
+            0
+
+        RBNode_elm_builtin _ _ _ left right ->
+            1 + sizeHelp left + sizeHelp right
 
 
 

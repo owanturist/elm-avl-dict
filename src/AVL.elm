@@ -66,22 +66,6 @@ c key value left right =
     RBNode_elm_builtin (1 + max (h left) (h right)) key value left right
 
 
-diff : Node key value -> Node key value -> Order
-diff left right =
-    let
-        d =
-            h left - h right
-    in
-    if d < -1 then
-        LT
-
-    else if d > 1 then
-        GT
-
-    else
-        EQ
-
-
 
 -- C O N S T R U C T I O N
 
@@ -129,10 +113,10 @@ fromListHelper ( key, value ) ( count, node ) =
 insert : comparable -> value -> AVL comparable value -> AVL comparable value
 insert key value (Internal.AVL count root) =
     let
-        ( modified, nextRoot ) =
+        ( added, nextRoot ) =
             insertHelp key value root
     in
-    if modified then
+    if added then
         Internal.AVL (count + 1) nextRoot
 
     else
@@ -148,41 +132,121 @@ insertHelp key value node =
         RBNode_elm_builtin height k v left right ->
             case compare key k of
                 LT ->
-                    case insertHelp key value left of
-                        ( True, (RBNode_elm_builtin lh lk lv ll lr) as nextLeft ) ->
+                    case left of
+                        RBEmpty_elm_builtin ->
                             ( True
-                            , if lh - h right > 1 then
-                                rotateRight k v right lk lv ll lr
-
-                              else
-                                c k v nextLeft right
+                            , c k v (s key value) right
                             )
 
-                        ( _, nextLeft ) ->
-                            ( False
-                            , RBNode_elm_builtin height k v nextLeft right
-                            )
+                        RBNode_elm_builtin _ lk lv ll lr ->
+                            insertLeft key value k v lk lv ll lr right
 
                 GT ->
-                    case insertHelp key value right of
-                        ( True, (RBNode_elm_builtin rh rk rv rl rr) as nextRight ) ->
+                    case right of
+                        RBEmpty_elm_builtin ->
                             ( True
-                            , if h left - rh < -1 then
-                                rotateLeft k v left rk rv rl rr
-
-                              else
-                                c k v left nextRight
+                            , c k v left (s key value)
                             )
 
-                        ( _, nextRight ) ->
-                            ( False
-                            , RBNode_elm_builtin height k v left nextRight
-                            )
+                        RBNode_elm_builtin _ rk rv rl rr ->
+                            insertRight key value k v left rk rv rl rr
 
                 EQ ->
                     ( False
                     , RBNode_elm_builtin height key value left right
                     )
+
+
+insertLeft : comparable -> value -> comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
+insertLeft key value pk pv lk lv ll lr pr =
+    case compare key lk of
+        LT ->
+            case ll of
+                RBEmpty_elm_builtin ->
+                    ( True
+                    , c lk lv (s key value) (c pk pv lr pr)
+                    )
+
+                RBNode_elm_builtin llh llk llv lll llr ->
+                    if 1 + max llh (h lr) < h pr then
+                        let
+                            ( added, nextLeft ) =
+                                insertLeft key value lk lv llk llv lll llr lr
+                        in
+                        ( added, c pk pv nextLeft pr )
+
+                    else
+                        -- rotate right
+                        insertLeft key value lk lv llk llv lll llr (c pk pv lr pr)
+
+        GT ->
+            case lr of
+                RBEmpty_elm_builtin ->
+                    ( True
+                    , c key value (c lk lv ll e) (c pk pv e pr)
+                    )
+
+                RBNode_elm_builtin lrh lrk lrv lrl lrr ->
+                    if 1 + max (h ll) lrh > h pr then
+                        let
+                            ( added, nextLeft ) =
+                                insertRight key value lk lv ll lrk lrv lrl lrr
+                        in
+                        ( added, c pk pv nextLeft pr )
+
+                    else
+                        insertRight key value lrk lrv (c lk lv ll lrl) pk pv lrr pr
+
+        EQ ->
+            ( False
+            , c pk pv (c key value ll lr) pr
+            )
+
+
+insertRight : comparable -> value -> comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
+insertRight key value pk pv pl rk rv rl rr =
+    case compare key rk of
+        LT ->
+            case rl of
+                RBEmpty_elm_builtin ->
+                    ( True
+                    , c key value (c pk pv pl e) (c rk rv e rr)
+                    )
+
+                RBNode_elm_builtin rlh rlk rlv rll rlr ->
+                    if 1 + max rlh (h rr) > h pl then
+                        let
+                            ( added, nextRight ) =
+                                insertLeft key value rk rv rlk rlv rll rlr rr
+                        in
+                        ( added, c pk pv pl nextRight )
+
+                    else
+                        insertLeft key value rlk rlv pk pv pl rll (c rk rv rlr rr)
+
+        GT ->
+            case rr of
+                RBEmpty_elm_builtin ->
+                    ( True
+                    , c rk rv (c pk pv pl rl) (s key value)
+                    )
+
+                RBNode_elm_builtin rrh rrk rrv rrl rrr ->
+                    if 1 + max (h rl) rrh < h pl then
+                        let
+                            ( added, nextRight ) =
+                                insertRight key value rk rv rl rrk rrv rrl rrr
+                        in
+                        ( added, c pk pv pl nextRight )
+
+                    else
+                        -- rotate left
+                        insertRight key value rk rv (c pk pv pl rl) rrk rrv rrl rrr
+
+        EQ ->
+            ( False
+            , c pk pv pl (c key value rl rr)
+            )
 
 
 rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
