@@ -41,8 +41,8 @@ type alias AVL key value =
 -- U T I L S
 
 
-h : Node key value -> Int
-h node =
+height : Node key value -> Int
+height node =
     case node of
         RBEmpty_elm_builtin ->
             0
@@ -51,24 +51,19 @@ h node =
             x
 
 
-e : Node key value
-e =
+nil : Node key value
+nil =
     RBEmpty_elm_builtin
 
 
-s : key -> value -> Node key value
-s key value =
-    RBNode_elm_builtin 1 key value e e
+leaf : key -> value -> Node key value -> Node key value -> Node key value
+leaf key value left right =
+    RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-c : key -> value -> Node key value -> Node key value -> Node key value
-c key value left right =
-    RBNode_elm_builtin (1 + max (h left) (h right)) key value left right
-
-
-i : Insertion key value -> Node key value
-i { key, value, left, right } =
-    c key value left right
+ins : Insertion key value -> Node key value
+ins { key, value, left, right } =
+    leaf key value left right
 
 
 
@@ -78,13 +73,13 @@ i { key, value, left, right } =
 {-| -}
 empty : AVL comparable value
 empty =
-    Internal.AVL 0 e
+    Internal.AVL 0 nil
 
 
 {-| -}
 singleton : comparable -> value -> AVL comparable value
 singleton key value =
-    Internal.AVL 1 (s key value)
+    Internal.AVL 1 (leaf key value nil nil)
 
 
 {-| -}
@@ -92,7 +87,7 @@ fromList : List ( comparable, value ) -> AVL comparable value
 fromList keyValues =
     let
         ( count, root ) =
-            List.foldl fromListHelper ( 0, e ) keyValues
+            List.foldl fromListHelper ( 0, nil ) keyValues
     in
     Internal.AVL count root
 
@@ -104,10 +99,10 @@ fromListHelper ( key, value ) ( count, node ) =
             insertHelp key value node
     in
     if insertion.added then
-        ( count + 1, i insertion )
+        ( count + 1, ins insertion )
 
     else
-        ( count, i insertion )
+        ( count, ins insertion )
 
 
 
@@ -122,10 +117,10 @@ insert key value (Internal.AVL count root) =
             insertHelp key value root
     in
     if insertion.added then
-        Internal.AVL (count + 1) (i insertion)
+        Internal.AVL (count + 1) (ins insertion)
 
     else
-        Internal.AVL count (i insertion)
+        Internal.AVL count (ins insertion)
 
 
 type alias Insertion key value =
@@ -141,7 +136,7 @@ insertHelp : comparable -> value -> Node comparable value -> Insertion comparabl
 insertHelp key value node =
     case node of
         RBEmpty_elm_builtin ->
-            Insertion True key value e e
+            Insertion True key value nil nil
 
         RBNode_elm_builtin _ k v l r ->
             case compare key k of
@@ -150,22 +145,22 @@ insertHelp key value node =
                         insertion =
                             insertHelp key value l
                     in
-                    if max (h insertion.left) (h insertion.right) > h r then
+                    if max (height insertion.left) (height insertion.right) > height r then
                         rotateRight k v insertion r
 
                     else
-                        Insertion insertion.added k v (i insertion) r
+                        Insertion insertion.added k v (ins insertion) r
 
                 GT ->
                     let
                         insertion =
                             insertHelp key value r
                     in
-                    if h l < max (h insertion.left) (h insertion.right) then
+                    if height l < max (height insertion.left) (height insertion.right) then
                         rotateLeft k v l insertion
 
                     else
-                        Insertion insertion.added k v l (i insertion)
+                        Insertion insertion.added k v l (ins insertion)
 
                 EQ ->
                     Insertion False key value l r
@@ -175,28 +170,28 @@ rotateLeft : comparable -> value -> Node comparable value -> Insertion comparabl
 rotateLeft pk pv pl insertion =
     case insertion.left of
         RBEmpty_elm_builtin ->
-            Insertion True insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
+            Insertion True insertion.key insertion.value (leaf pk pv pl insertion.left) insertion.right
 
         RBNode_elm_builtin lh lk lv ll lr ->
-            if lh > h insertion.right then
-                Insertion True lk lv (c pk pv pl ll) (c insertion.key insertion.value lr insertion.right)
+            if lh > height insertion.right then
+                Insertion True lk lv (leaf pk pv pl ll) (leaf insertion.key insertion.value lr insertion.right)
 
             else
-                Insertion True insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
+                Insertion True insertion.key insertion.value (leaf pk pv pl insertion.left) insertion.right
 
 
 rotateRight : comparable -> value -> Insertion comparable value -> Node comparable value -> Insertion comparable value
 rotateRight pk pv insertion pr =
     case insertion.right of
         RBEmpty_elm_builtin ->
-            Insertion True insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
+            Insertion True insertion.key insertion.value insertion.left (leaf pk pv insertion.right pr)
 
         RBNode_elm_builtin rh rk rv rl rr ->
-            if h insertion.left < rh then
-                Insertion True rk rv (c insertion.key insertion.value insertion.left rl) (c pk pv rr pr)
+            if height insertion.left < rh then
+                Insertion True rk rv (leaf insertion.key insertion.value insertion.left rl) (leaf pk pv rr pr)
 
             else
-                Insertion True insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
+                Insertion True insertion.key insertion.value insertion.left (leaf pk pv insertion.right pr)
 
 
 
