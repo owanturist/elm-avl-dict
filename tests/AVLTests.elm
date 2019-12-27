@@ -194,14 +194,26 @@ insertSuite =
                         (Ok AVL.empty)
                     |> Expect.ok
 
-        --
-        , fuzz (Fuzz.list (Fuzz.intRange -200 200)) "random keys" <|
-            \list ->
-                list
-                    |> List.foldl
-                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
-                        (Ok AVL.empty)
-                    |> Expect.ok
+        -- , fuzz (Fuzz.list (Fuzz.intRange -200 200)) "random keys" <|
+        --     \list ->
+        --         list
+        --             |> List.foldl
+        --                 (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
+        --                 (Ok AVL.empty)
+        --             |> Expect.ok
+        , test "RAND" <|
+            \_ ->
+                [ ( 2, 'A' ), ( 0, 'B' ), ( 3, 'C' ), ( 1, 'D' ), ( 1, 'E' ) ]
+                    |> List.foldl (\( k, v ) -> AVL.insert k v) AVL.empty
+                    |> AVL.size
+                    |> Expect.equal 4
+        , test "[5,1,2,0,6,3,4,4]" <|
+            \_ ->
+                [ 5, 1, 2, 0, 6, 3, 4, 4 ]
+                    |> List.foldl (\i -> AVL.insert i (i * i)) AVL.empty
+                    -- |> validate String.fromInt
+                    |> draw String.fromInt String.fromInt
+                    |> Expect.equal ""
         ]
 
 

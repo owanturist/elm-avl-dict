@@ -125,156 +125,196 @@ insert key value (Internal.AVL count root) =
 
 insertHelp : comparable -> value -> Node comparable value -> ( Bool, Node comparable value )
 insertHelp key value node =
+    -- let
+    --     _ =
+    --         Debug.log "insertHelp" key
+    -- in
     case node of
         RBEmpty_elm_builtin ->
             ( True, s key value )
 
-        RBNode_elm_builtin height k v left right ->
+        RBNode_elm_builtin height k v l r ->
             case compare key k of
                 LT ->
-                    case left of
-                        RBEmpty_elm_builtin ->
-                            ( True
-                            , c k v (s key value) right
-                            )
-
-                        RBNode_elm_builtin _ lk lv ll lr ->
-                            insertLeft key value k v lk lv ll lr right
+                    insertLeft key value k v l r
 
                 GT ->
-                    case right of
-                        RBEmpty_elm_builtin ->
-                            ( True
-                            , c k v left (s key value)
-                            )
-
-                        RBNode_elm_builtin _ rk rv rl rr ->
-                            insertRight key value k v left rk rv rl rr
+                    insertRight key value k v l r
 
                 EQ ->
+                    -- let
+                    --     _ =
+                    --         Debug.log "ih" k
+                    -- in
                     ( False
-                    , RBNode_elm_builtin height key value left right
+                    , RBNode_elm_builtin height key value l r
                     )
 
 
-insertLeft : comparable -> value -> comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
-insertLeft key value pk pv lk lv ll lr pr =
-    case compare key lk of
-        LT ->
-            case ll of
-                RBEmpty_elm_builtin ->
-                    ( True
-                    , c lk lv (s key value) (c pk pv lr pr)
-                    )
-
-                RBNode_elm_builtin llh llk llv lll llr ->
-                    if 1 + max llh (h lr) < h pr then
-                        let
-                            ( added, nextLeft ) =
-                                insertLeft key value lk lv llk llv lll llr lr
-                        in
-                        ( added, c pk pv nextLeft pr )
-
-                    else
-                        -- rotate right
-                        insertLeft key value lk lv llk llv lll llr (c pk pv lr pr)
-
-        GT ->
-            case lr of
-                RBEmpty_elm_builtin ->
-                    ( True
-                    , c key value (c lk lv ll e) (c pk pv e pr)
-                    )
-
-                RBNode_elm_builtin lrh lrk lrv lrl lrr ->
-                    if 1 + max (h ll) lrh > h pr then
-                        let
-                            ( added, nextLeft ) =
-                                insertRight key value lk lv ll lrk lrv lrl lrr
-                        in
-                        ( added, c pk pv nextLeft pr )
-
-                    else
-                        insertRight key value lrk lrv (c lk lv ll lrl) pk pv lrr pr
-
-        EQ ->
-            ( False
-            , c pk pv (c key value ll lr) pr
+insertLeft : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
+insertLeft key value pk pv pl pr =
+    -- let
+    --     _ =
+    --         Debug.log "insertLeft" key
+    -- in
+    case pl of
+        RBEmpty_elm_builtin ->
+            ( True
+            , c pk pv (s key value) pr
             )
 
-
-insertRight : comparable -> value -> comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
-insertRight key value pk pv pl rk rv rl rr =
-    case compare key rk of
-        LT ->
-            case rl of
-                RBEmpty_elm_builtin ->
-                    ( True
-                    , c key value (c pk pv pl e) (c rk rv e rr)
-                    )
-
-                RBNode_elm_builtin rlh rlk rlv rll rlr ->
-                    if 1 + max rlh (h rr) > h pl then
-                        let
-                            ( added, nextRight ) =
-                                insertLeft key value rk rv rlk rlv rll rlr rr
-                        in
-                        ( added, c pk pv pl nextRight )
-
-                    else
-                        insertLeft key value rlk rlv pk pv pl rll (c rk rv rlr rr)
-
-        GT ->
-            case rr of
-                RBEmpty_elm_builtin ->
-                    ( True
-                    , c rk rv (c pk pv pl rl) (s key value)
-                    )
-
-                RBNode_elm_builtin rrh rrk rrv rrl rrr ->
-                    if 1 + max (h rl) rrh < h pl then
-                        let
-                            ( added, nextRight ) =
-                                insertRight key value rk rv rl rrk rrv rrl rrr
-                        in
-                        ( added, c pk pv pl nextRight )
-
-                    else
-                        -- rotate left
-                        insertRight key value rk rv (c pk pv pl rl) rrk rrv rrl rrr
-
-        EQ ->
-            ( False
-            , c pk pv pl (c key value rl rr)
-            )
-
-
-rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-rotateLeft pk pv pl rk rv rl rr =
-    case rl of
         RBNode_elm_builtin lh lk lv ll lr ->
-            if lh > h rr then
-                c lk lv (c pk pv pl ll) (c rk rv lr rr)
+            if lh > h pr then
+                case compare key lk of
+                    LT ->
+                        let
+                            ( added, nextLL ) =
+                                insertHelp key value ll
+                        in
+                        ( added
+                        , c lk lv nextLL (c pk pv lr pr)
+                        )
+
+                    GT ->
+                        case lr of
+                            RBEmpty_elm_builtin ->
+                                ( True
+                                , c key value pl (c pk pv e pr)
+                                )
+
+                            RBNode_elm_builtin lrh lrk lrv lrl lrr ->
+                                case compare key lrk of
+                                    LT ->
+                                        let
+                                            ( added, nextLRL ) =
+                                                insertHelp key value lrl
+                                        in
+                                        ( added
+                                        , c lrk lrv (c lk lv ll nextLRL) (c pk pv lrr pr)
+                                        )
+
+                                    GT ->
+                                        let
+                                            ( added, nextLRR ) =
+                                                insertHelp key value lrr
+                                        in
+                                        ( added
+                                        , c lrk lrv (c lk lv ll lrl) (c pk pv nextLRR pr)
+                                        )
+
+                                    EQ ->
+                                        ( False
+                                        , c pk
+                                            pv
+                                            (RBNode_elm_builtin lh
+                                                lk
+                                                lv
+                                                ll
+                                                (RBNode_elm_builtin lrh key value lrl lrr)
+                                            )
+                                            pr
+                                        )
+
+                    EQ ->
+                        -- let
+                        --     _ =
+                        --         Debug.log "il" lk
+                        -- in
+                        ( False
+                        , c pk pv (RBNode_elm_builtin lh key value ll lr) pr
+                        )
 
             else
-                c rk rv (c pk pv pl rl) rr
+                let
+                    ( added, nextPL ) =
+                        insertHelp key value pl
+                in
+                ( added
+                , c pk pv nextPL pr
+                )
 
-        _ ->
-            c rk rv (c pk pv pl rl) rr
 
+insertRight : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
+insertRight key value pk pv pl pr =
+    -- let
+    --     _ =
+    --         Debug.log "insertRight" key
+    -- in
+    case pr of
+        RBEmpty_elm_builtin ->
+            ( True
+            , c pk pv pl (s key value)
+            )
 
-rotateRight : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
-rotateRight pk pv pr lk lv ll lr =
-    case lr of
         RBNode_elm_builtin rh rk rv rl rr ->
-            if h ll < rh then
-                c rk rv (c lk lv ll rl) (c pk pv rr pr)
+            if rh > h pl then
+                case compare key rk of
+                    LT ->
+                        case rl of
+                            RBEmpty_elm_builtin ->
+                                ( True
+                                , c key value (c pk pv pl e) pr
+                                )
+
+                            RBNode_elm_builtin rlh rlk rlv rll rlr ->
+                                case compare key rlk of
+                                    LT ->
+                                        let
+                                            ( added, nextRLL ) =
+                                                insertHelp key value rll
+                                        in
+                                        ( added
+                                        , c rlk rlv (c pk pv pl nextRLL) (c rk rv rlr rr)
+                                        )
+
+                                    GT ->
+                                        let
+                                            ( added, nextRLR ) =
+                                                insertHelp key value rlr
+                                        in
+                                        ( added
+                                        , c rlk rlv (c pk pv pl rll) (c rk rv nextRLR rr)
+                                        )
+
+                                    EQ ->
+                                        ( False
+                                        , c pk
+                                            pv
+                                            pl
+                                            (RBNode_elm_builtin rh
+                                                rk
+                                                rv
+                                                (RBNode_elm_builtin rlh key value rll rlr)
+                                                rr
+                                            )
+                                        )
+
+                    GT ->
+                        let
+                            ( added, nextRR ) =
+                                insertHelp key value rr
+                        in
+                        ( added
+                        , c rk rv (c pk pv pl rl) nextRR
+                        )
+
+                    EQ ->
+                        -- let
+                        --     _ =
+                        --         Debug.log "ir" rk
+                        -- in
+                        ( False
+                        , c pk pv pl (RBNode_elm_builtin rh key value rl rr)
+                        )
 
             else
-                c lk lv ll (c pk pv lr pr)
-
-        _ ->
-            c lk lv ll (c pk pv lr pr)
+                let
+                    ( added, nextPR ) =
+                        insertHelp key value pr
+                in
+                ( added
+                , c pk pv pl nextPR
+                )
 
 
 
