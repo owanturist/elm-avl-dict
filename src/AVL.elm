@@ -100,10 +100,10 @@ fromList keyValues =
 fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
 fromListHelper ( key, value ) ( count, node ) =
     let
-        ( added, insertion ) =
+        insertion =
             insertHelp key value node
     in
-    if added then
+    if insertion.added then
         ( count + 1, i insertion )
 
     else
@@ -118,10 +118,10 @@ fromListHelper ( key, value ) ( count, node ) =
 insert : comparable -> value -> AVL comparable value -> AVL comparable value
 insert key value (Internal.AVL count root) =
     let
-        ( added, insertion ) =
+        insertion =
             insertHelp key value root
     in
-    if added then
+    if insertion.added then
         Internal.AVL (count + 1) (i insertion)
 
     else
@@ -129,79 +129,74 @@ insert key value (Internal.AVL count root) =
 
 
 type alias Insertion key value =
-    { key : key
+    { added : Bool
+    , key : key
     , value : value
     , left : Node key value
     , right : Node key value
     }
 
 
-insertHelp : comparable -> value -> Node comparable value -> ( Bool, Insertion comparable value )
+insertHelp : comparable -> value -> Node comparable value -> Insertion comparable value
 insertHelp key value node =
     case node of
         RBEmpty_elm_builtin ->
-            ( True, Insertion key value e e )
+            Insertion True key value e e
 
         RBNode_elm_builtin _ k v l r ->
             case compare key k of
                 LT ->
                     let
-                        ( added, insertion ) =
+                        insertion =
                             insertHelp key value l
                     in
-                    ( added
-                    , if max (h insertion.left) (h insertion.right) > h r then
+                    if max (h insertion.left) (h insertion.right) > h r then
                         rotateRight k v insertion r
 
-                      else
-                        Insertion k v (i insertion) r
-                    )
+                    else
+                        Insertion insertion.added k v (i insertion) r
 
                 GT ->
                     let
-                        ( added, insertion ) =
+                        insertion =
                             insertHelp key value r
                     in
-                    ( added
-                    , if h l < max (h insertion.left) (h insertion.right) then
+                    if h l < max (h insertion.left) (h insertion.right) then
                         rotateLeft k v l insertion
 
-                      else
-                        Insertion k v l (i insertion)
-                    )
+                    else
+                        Insertion insertion.added k v l (i insertion)
 
                 EQ ->
-                    ( False
-                    , Insertion key value l r
-                    )
+                    Insertion False key value l r
 
 
 rotateLeft : comparable -> value -> Node comparable value -> Insertion comparable value -> Insertion comparable value
 rotateLeft pk pv pl insertion =
     case insertion.left of
         RBEmpty_elm_builtin ->
-            Insertion insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
+            Insertion True insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
 
         RBNode_elm_builtin lh lk lv ll lr ->
             if lh > h insertion.right then
-                Insertion lk lv (c pk pv pl ll) (c insertion.key insertion.value lr insertion.right)
+                Insertion True lk lv (c pk pv pl ll) (c insertion.key insertion.value lr insertion.right)
 
             else
-                Insertion insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
+                Insertion True insertion.key insertion.value (c pk pv pl insertion.left) insertion.right
 
 
 rotateRight : comparable -> value -> Insertion comparable value -> Node comparable value -> Insertion comparable value
 rotateRight pk pv insertion pr =
     case insertion.right of
         RBEmpty_elm_builtin ->
-            Insertion insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
+            Insertion True insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
 
         RBNode_elm_builtin rh rk rv rl rr ->
             if h insertion.left < rh then
-                Insertion rk rv (c insertion.key insertion.value insertion.left rl) (c pk pv rr pr)
+                Insertion True rk rv (c insertion.key insertion.value insertion.left rl) (c pk pv rr pr)
 
             else
-                Insertion insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
+                Insertion True insertion.key insertion.value insertion.left (c pk pv insertion.right pr)
 
 
 
