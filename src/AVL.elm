@@ -66,6 +66,22 @@ c key value left right =
     RBNode_elm_builtin (1 + max (h left) (h right)) key value left right
 
 
+diff : Node key value -> Node key value -> Order
+diff left right =
+    let
+        d =
+            h left - h right
+    in
+    if d < -1 then
+        LT
+
+    else if d > 1 then
+        GT
+
+    else
+        EQ
+
+
 
 -- C O N S T R U C T I O N
 
@@ -113,10 +129,10 @@ fromListHelper ( key, value ) ( count, node ) =
 insert : comparable -> value -> AVL comparable value -> AVL comparable value
 insert key value (Internal.AVL count root) =
     let
-        ( added, nextRoot ) =
+        ( modified, nextRoot ) =
             insertHelp key value root
     in
-    if added then
+    if modified then
         Internal.AVL (count + 1) nextRoot
 
     else
@@ -125,196 +141,76 @@ insert key value (Internal.AVL count root) =
 
 insertHelp : comparable -> value -> Node comparable value -> ( Bool, Node comparable value )
 insertHelp key value node =
-    -- let
-    --     _ =
-    --         Debug.log "insertHelp" key
-    -- in
     case node of
         RBEmpty_elm_builtin ->
             ( True, s key value )
 
-        RBNode_elm_builtin height k v l r ->
+        RBNode_elm_builtin height k v left right ->
             case compare key k of
                 LT ->
-                    insertLeft key value k v l r
+                    case insertHelp key value left of
+                        ( True, (RBNode_elm_builtin lh lk lv ll lr) as nextLeft ) ->
+                            ( True
+                            , if lh - h right > 1 then
+                                rotateRight k v right lk lv ll lr
+
+                              else
+                                c k v nextLeft right
+                            )
+
+                        ( _, nextLeft ) ->
+                            ( False
+                            , RBNode_elm_builtin height k v nextLeft right
+                            )
 
                 GT ->
-                    insertRight key value k v l r
+                    case insertHelp key value right of
+                        ( True, (RBNode_elm_builtin rh rk rv rl rr) as nextRight ) ->
+                            ( True
+                            , if h left - rh < -1 then
+                                rotateLeft k v left rk rv rl rr
+
+                              else
+                                c k v left nextRight
+                            )
+
+                        ( _, nextRight ) ->
+                            ( False
+                            , RBNode_elm_builtin height k v left nextRight
+                            )
 
                 EQ ->
-                    -- let
-                    --     _ =
-                    --         Debug.log "ih" k
-                    -- in
                     ( False
-                    , RBNode_elm_builtin height key value l r
+                    , RBNode_elm_builtin height key value left right
                     )
 
 
-insertLeft : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
-insertLeft key value pk pv pl pr =
-    -- let
-    --     _ =
-    --         Debug.log "insertLeft" key
-    -- in
-    case pl of
-        RBEmpty_elm_builtin ->
-            ( True
-            , c pk pv (s key value) pr
-            )
-
+rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateLeft pk pv pl rk rv rl rr =
+    case rl of
         RBNode_elm_builtin lh lk lv ll lr ->
-            if lh > h pr then
-                case compare key lk of
-                    LT ->
-                        let
-                            ( added, nextLL ) =
-                                insertHelp key value ll
-                        in
-                        ( added
-                        , c lk lv nextLL (c pk pv lr pr)
-                        )
-
-                    GT ->
-                        case lr of
-                            RBEmpty_elm_builtin ->
-                                ( True
-                                , c key value pl (c pk pv e pr)
-                                )
-
-                            RBNode_elm_builtin lrh lrk lrv lrl lrr ->
-                                case compare key lrk of
-                                    LT ->
-                                        let
-                                            ( added, nextLRL ) =
-                                                insertHelp key value lrl
-                                        in
-                                        ( added
-                                        , c lrk lrv (c lk lv ll nextLRL) (c pk pv lrr pr)
-                                        )
-
-                                    GT ->
-                                        let
-                                            ( added, nextLRR ) =
-                                                insertHelp key value lrr
-                                        in
-                                        ( added
-                                        , c lrk lrv (c lk lv ll lrl) (c pk pv nextLRR pr)
-                                        )
-
-                                    EQ ->
-                                        ( False
-                                        , c pk
-                                            pv
-                                            (RBNode_elm_builtin lh
-                                                lk
-                                                lv
-                                                ll
-                                                (RBNode_elm_builtin lrh key value lrl lrr)
-                                            )
-                                            pr
-                                        )
-
-                    EQ ->
-                        -- let
-                        --     _ =
-                        --         Debug.log "il" lk
-                        -- in
-                        ( False
-                        , c pk pv (RBNode_elm_builtin lh key value ll lr) pr
-                        )
+            if lh > h rr then
+                c lk lv (c pk pv pl ll) (c rk rv lr rr)
 
             else
-                let
-                    ( added, nextPL ) =
-                        insertHelp key value pl
-                in
-                ( added
-                , c pk pv nextPL pr
-                )
+                c rk rv (c pk pv pl rl) rr
+
+        _ ->
+            c rk rv (c pk pv pl rl) rr
 
 
-insertRight : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> ( Bool, Node comparable value )
-insertRight key value pk pv pl pr =
-    -- let
-    --     _ =
-    --         Debug.log "insertRight" key
-    -- in
-    case pr of
-        RBEmpty_elm_builtin ->
-            ( True
-            , c pk pv pl (s key value)
-            )
-
+rotateRight : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateRight pk pv pr lk lv ll lr =
+    case lr of
         RBNode_elm_builtin rh rk rv rl rr ->
-            if rh > h pl then
-                case compare key rk of
-                    LT ->
-                        case rl of
-                            RBEmpty_elm_builtin ->
-                                ( True
-                                , c key value (c pk pv pl e) pr
-                                )
-
-                            RBNode_elm_builtin rlh rlk rlv rll rlr ->
-                                case compare key rlk of
-                                    LT ->
-                                        let
-                                            ( added, nextRLL ) =
-                                                insertHelp key value rll
-                                        in
-                                        ( added
-                                        , c rlk rlv (c pk pv pl nextRLL) (c rk rv rlr rr)
-                                        )
-
-                                    GT ->
-                                        let
-                                            ( added, nextRLR ) =
-                                                insertHelp key value rlr
-                                        in
-                                        ( added
-                                        , c rlk rlv (c pk pv pl rll) (c rk rv nextRLR rr)
-                                        )
-
-                                    EQ ->
-                                        ( False
-                                        , c pk
-                                            pv
-                                            pl
-                                            (RBNode_elm_builtin rh
-                                                rk
-                                                rv
-                                                (RBNode_elm_builtin rlh key value rll rlr)
-                                                rr
-                                            )
-                                        )
-
-                    GT ->
-                        let
-                            ( added, nextRR ) =
-                                insertHelp key value rr
-                        in
-                        ( added
-                        , c rk rv (c pk pv pl rl) nextRR
-                        )
-
-                    EQ ->
-                        -- let
-                        --     _ =
-                        --         Debug.log "ir" rk
-                        -- in
-                        ( False
-                        , c pk pv pl (RBNode_elm_builtin rh key value rl rr)
-                        )
+            if h ll < rh then
+                c rk rv (c lk lv ll rl) (c pk pv rr pr)
 
             else
-                let
-                    ( added, nextPR ) =
-                        insertHelp key value pr
-                in
-                ( added
-                , c pk pv pl nextPR
-                )
+                c lk lv ll (c pk pv lr pr)
+
+        _ ->
+            c lk lv ll (c pk pv lr pr)
 
 
 
