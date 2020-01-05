@@ -1,11 +1,11 @@
 module AVLTests exposing (..)
 
 import AVL
-import Expect exposing (Expectation)
+import Expect
 import Fuzz
 import Internal exposing (AVL(..), Node(..))
 import List.Extra
-import Test exposing (Test, describe, fuzz, fuzz2, fuzz3, test)
+import Test exposing (Test, describe, fuzz, fuzz2, test)
 
 
 draw : (key -> String) -> (value -> String) -> AVL key value -> String
@@ -49,26 +49,24 @@ drawHelp keyToString valueToString node =
                 ++ shiftRight (drawHelp keyToString valueToString right)
 
 
-expectValid : (comparable -> String) -> AVL comparable value -> Expectation
-expectValid keyToString avl =
-    case validate keyToString avl of
-        Err error ->
-            Expect.fail error
-
-        Ok _ ->
-            Expect.pass
-
-
 validate : (comparable -> String) -> AVL comparable value -> Result String (AVL comparable value)
-validate keyToString ((AVL _ root) as avl) =
-    Result.map (always avl) (validateHelp keyToString root)
+validate keyToString (AVL size root) =
+    Result.andThen
+        (\( _, s ) ->
+            if s == size then
+                Ok (AVL size root)
+
+            else
+                Err ("tracking size [" ++ String.fromInt size ++ "] does not match with real one [" ++ String.fromInt s ++ "]")
+        )
+        (validateHelp keyToString root)
 
 
-validateHelp : (comparable -> String) -> Node comparable value -> Result String Int
+validateHelp : (comparable -> String) -> Node comparable value -> Result String ( Int, Int )
 validateHelp keyToString node =
     case node of
         RBEmpty_elm_builtin ->
-            Ok 0
+            Ok ( 0, 0 )
 
         RBNode_elm_builtin _ key _ left right ->
             if Maybe.withDefault False (Maybe.map ((<) key) (extract left)) then
@@ -79,12 +77,12 @@ validateHelp keyToString node =
 
             else
                 Result.andThen
-                    (\( lh, rh ) ->
+                    (\( ( lh, ls ), ( rh, rs ) ) ->
                         if abs (lh - rh) > 1 then
                             Err ("height diff [" ++ keyToString key ++ "]: " ++ String.fromInt lh ++ " vs " ++ String.fromInt rh)
 
                         else
-                            Ok (1 + max lh rh)
+                            Ok ( 1 + max lh rh, 1 + ls + rs )
                     )
                     (Result.map2 Tuple.pair
                         (validateHelp keyToString left)
@@ -100,21 +98,6 @@ extract node =
 
         RBNode_elm_builtin _ key _ _ _ ->
             Just key
-
-
-size : AVL key value -> Int
-size (AVL _ root) =
-    sizeHelp root
-
-
-sizeHelp : Node key value -> Int
-sizeHelp node =
-    case node of
-        RBEmpty_elm_builtin ->
-            0
-
-        RBNode_elm_builtin _ _ _ left right ->
-            1 + sizeHelp left + sizeHelp right
 
 
 
