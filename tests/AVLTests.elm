@@ -49,7 +49,7 @@ drawHelp keyToString valueToString node =
                 ++ shiftRight (drawHelp keyToString valueToString right)
 
 
-expectValid : (key -> String) -> AVL key value -> Expectation
+expectValid : (comparable -> String) -> AVL comparable value -> Expectation
 expectValid keyToString avl =
     case validate keyToString avl of
         Err error ->
@@ -59,30 +59,47 @@ expectValid keyToString avl =
             Expect.pass
 
 
-validate : (key -> String) -> AVL key value -> Result String (AVL key value)
+validate : (comparable -> String) -> AVL comparable value -> Result String (AVL comparable value)
 validate keyToString ((AVL _ root) as avl) =
     Result.map (always avl) (validateHelp keyToString root)
 
 
-validateHelp : (key -> String) -> Node key value -> Result String Int
+validateHelp : (comparable -> String) -> Node comparable value -> Result String Int
 validateHelp keyToString node =
     case node of
         RBEmpty_elm_builtin ->
             Ok 0
 
         RBNode_elm_builtin _ key _ left right ->
-            Result.andThen
-                (\( lh, rh ) ->
-                    if abs (lh - rh) > 1 then
-                        Err ("height diff [" ++ keyToString key ++ "]: " ++ String.fromInt lh ++ " vs " ++ String.fromInt rh)
+            if Maybe.withDefault False (Maybe.map ((<) key) (extract left)) then
+                Err ("key [" ++ keyToString key ++ "] is less than left")
 
-                    else
-                        Ok (1 + max lh rh)
-                )
-                (Result.map2 Tuple.pair
-                    (validateHelp keyToString left)
-                    (validateHelp keyToString right)
-                )
+            else if Maybe.withDefault False (Maybe.map ((>) key) (extract right)) then
+                Err ("key [" ++ keyToString key ++ "] is more than right")
+
+            else
+                Result.andThen
+                    (\( lh, rh ) ->
+                        if abs (lh - rh) > 1 then
+                            Err ("height diff [" ++ keyToString key ++ "]: " ++ String.fromInt lh ++ " vs " ++ String.fromInt rh)
+
+                        else
+                            Ok (1 + max lh rh)
+                    )
+                    (Result.map2 Tuple.pair
+                        (validateHelp keyToString left)
+                        (validateHelp keyToString right)
+                    )
+
+
+extract : Node key value -> Maybe key
+extract node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ key _ _ _ ->
+            Just key
 
 
 size : AVL key value -> Int
