@@ -228,13 +228,9 @@ isEmptySuite =
         --
         , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.fromList" <|
             \list ->
-                let
-                    uniq =
-                        List.Extra.uniqueBy Tuple.first list
-                in
                 AVL.fromList list
                     |> AVL.isEmpty
-                    |> Expect.equal (List.isEmpty uniq)
+                    |> Expect.equal (List.isEmpty list)
         ]
 
 

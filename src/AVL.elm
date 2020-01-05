@@ -1,8 +1,8 @@
 module AVL exposing
     ( AVL
     , empty, singleton, fromList
-    , insert
-    , isEmpty, size, member, get
+    , insert, remove
+    , isEmpty, size, member, get, getMin, getMax
     )
 
 {-| An AVL Tree based dictionary.
@@ -20,12 +20,12 @@ module AVL exposing
 
 # Manipulation
 
-@docs insert
+@docs insert, remove
 
 
 # Query
 
-@docs isEmpty, size, member, get
+@docs isEmpty, size, member, get, getMin, getMax
 
 -}
 
@@ -145,6 +145,7 @@ insertHelp key value node =
                         insertion =
                             insertHelp key value l
                     in
+                    -- equal to: 1 + (max heightInsertionLeft heightInsertionRight) - heightRight > 1
                     if max (height insertion.left) (height insertion.right) > height r then
                         rotateRight k v insertion r
 
@@ -156,6 +157,7 @@ insertHelp key value node =
                         insertion =
                             insertHelp key value r
                     in
+                    -- equal to: heightLeft - (1 + (max heightInsertionLeft heightInsertionRight)) < 1
                     if height l < max (height insertion.left) (height insertion.right) then
                         rotateLeft k v l insertion
 
@@ -192,6 +194,35 @@ rotateRight pk pv insertion pr =
 
             else
                 Insertion True insertion.key insertion.value insertion.left (leaf pk pv insertion.right pr)
+
+
+{-| -}
+remove : comparable -> AVL comparable value -> AVL comparable value
+remove key ((Internal.AVL count root) as avl) =
+    case removeHelp key root of
+        Nothing ->
+            avl
+
+        Just nextRoot ->
+            Internal.AVL (max 0 (count - 1)) nextRoot
+
+
+removeHelp : comparable -> Node comparable value -> Maybe (Node comparable value)
+removeHelp key node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v l r ->
+            case compare key k of
+                LT ->
+                    Nothing
+
+                GT ->
+                    Nothing
+
+                EQ ->
+                    Nothing
 
 
 
@@ -238,3 +269,45 @@ getHelper target node =
 
                 EQ ->
                     Just value
+
+
+{-| -}
+getMin : AVL comparable value -> Maybe ( comparable, value )
+getMin (Internal.AVL _ root) =
+    getMinHelper root
+
+
+getMinHelper : Node comparable value -> Maybe ( comparable, value )
+getMinHelper node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v l _ ->
+            case getMinHelper l of
+                Nothing ->
+                    Just ( k, v )
+
+                min ->
+                    min
+
+
+{-| -}
+getMax : AVL comparable value -> Maybe ( comparable, value )
+getMax (Internal.AVL _ root) =
+    getMaxHelper root
+
+
+getMaxHelper : Node comparable value -> Maybe ( comparable, value )
+getMaxHelper node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v _ r ->
+            case getMinHelper r of
+                Nothing ->
+                    Just ( k, v )
+
+                max ->
+                    max
