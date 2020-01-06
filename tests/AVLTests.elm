@@ -258,6 +258,25 @@ removeMinSuite =
                         [ Expect.ok << validate String.fromInt
                         , Expect.equal Nothing << AVL.get minKey
                         ]
+
+        --
+        , fuzz
+            (Fuzz.map2 List.range
+                (Fuzz.intRange -400 -100)
+                (Fuzz.intRange 100 400)
+                |> Fuzz.map (List.indexedMap Tuple.pair)
+            )
+            "clear"
+          <|
+            \list ->
+                List.foldl
+                    (\_ -> Result.andThen (validate String.fromInt << AVL.removeMin))
+                    (Ok (AVL.fromList list))
+                    list
+                    |> Expect.all
+                        [ Expect.ok
+                        , Expect.equal True << Result.withDefault False << Result.map AVL.isEmpty
+                        ]
         ]
 
 
@@ -313,6 +332,25 @@ removeMaxSuite =
                     |> Expect.all
                         [ Expect.ok << validate String.fromInt
                         , Expect.equal Nothing << AVL.get maxKey
+                        ]
+
+        --
+        , fuzz
+            (Fuzz.map2 List.range
+                (Fuzz.intRange -400 -100)
+                (Fuzz.intRange 100 400)
+                |> Fuzz.map (List.indexedMap Tuple.pair)
+            )
+            "clear"
+          <|
+            \list ->
+                List.foldl
+                    (\_ -> Result.andThen (validate String.fromInt << AVL.removeMax))
+                    (Ok (AVL.fromList list))
+                    list
+                    |> Expect.all
+                        [ Expect.ok
+                        , Expect.equal True << Result.withDefault False << Result.map AVL.isEmpty
                         ]
         ]
 
