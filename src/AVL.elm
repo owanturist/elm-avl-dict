@@ -1,7 +1,7 @@
 module AVL exposing
     ( AVL
     , empty, singleton, fromList
-    , insert, remove, removeMin, removeMax
+    , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
     )
 
@@ -20,7 +20,7 @@ module AVL exposing
 
 # Manipulation
 
-@docs insert, remove, removeMin, removeMax
+@docs insert, remove, removeMin, removeMax, update
 
 
 # Query
@@ -304,6 +304,27 @@ removeMaxHelp node =
 
                 Just ( rk, rv, nextR ) ->
                     Just ( rk, rv, balance k v l nextR )
+
+
+{-| -}
+update : comparable -> (Maybe value -> Maybe value) -> AVL comparable value -> AVL comparable value
+update key transform avl =
+    case get key avl of
+        Nothing ->
+            case transform Nothing of
+                Nothing ->
+                    avl
+
+                Just value ->
+                    insert key value avl
+
+        just ->
+            case transform just of
+                Nothing ->
+                    remove key avl
+
+                Just value ->
+                    insert key value avl
 
 
 
