@@ -4,7 +4,7 @@ module AVL exposing
     , keys, values, toList
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
-    , map, filter, foldl, foldr
+    , map, filter, partition, foldl, foldr
     )
 
 {-| An AVL Tree based dictionary.
@@ -37,7 +37,7 @@ module AVL exposing
 
 # Transform
 
-@docs map, filter, foldl, foldr
+@docs map, filter, partition, foldl, foldr
 
 -}
 
@@ -73,6 +73,11 @@ leaf key value left right =
     RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
+formTuple : ( Int, Node key value ) -> AVL key value
+formTuple ( count, root ) =
+    Internal.AVL count root
+
+
 
 -- C O N S T R U C T I O N
 
@@ -91,12 +96,8 @@ singleton key value =
 
 {-| -}
 fromList : List ( comparable, value ) -> AVL comparable value
-fromList keyValues =
-    let
-        ( count, root ) =
-            List.foldl fromListHelper ( 0, nil ) keyValues
-    in
-    Internal.AVL count root
+fromList =
+    formTuple << List.foldl fromListHelper ( 0, nil )
 
 
 fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
@@ -466,23 +467,41 @@ mapHelp fn node =
 
 
 filter : (comparable -> value -> Bool) -> AVL comparable value -> AVL comparable value
-filter check avl =
-    let
-        ( count, root ) =
-            foldl (filterHelp check) ( 0, nil ) avl
-    in
-    Internal.AVL count root
+filter check =
+    formTuple << foldl (filterHelp check) ( 0, nil )
 
 
 filterHelp : (comparable -> value -> Bool) -> comparable -> value -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
-filterHelp check key value ( count, root ) =
+filterHelp check key value (( count, root ) as acc) =
     if check key value then
         ( count + 1
         , Tuple.second (insertHelp key value root)
         )
 
     else
-        ( count, root )
+        acc
+
+
+partition : (comparable -> value -> Bool) -> AVL comparable value -> ( AVL comparable value, AVL comparable value )
+partition check =
+    Tuple.mapBoth formTuple formTuple << foldl (partitionHelp check) ( ( 0, nil ), ( 0, nil ) )
+
+
+partitionHelp : (comparable -> value -> Bool) -> comparable -> value -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) ) -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) )
+partitionHelp check key value ( ( leftCount, leftRoot ) as left, ( rightCount, rightRoot ) as right ) =
+    if check key value then
+        ( ( leftCount + 1
+          , Tuple.second (insertHelp key value leftRoot)
+          )
+        , right
+        )
+
+    else
+        ( left
+        , ( rightCount + 1
+          , Tuple.second (insertHelp key value rightRoot)
+          )
+        )
 
 
 {-| -}
