@@ -5,6 +5,7 @@ module AVL exposing
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
     , map, filter, partition, foldl, foldr
+    , union, diff, intersect
     )
 
 {-| An AVL Tree based dictionary.
@@ -38,6 +39,11 @@ module AVL exposing
 # Transform
 
 @docs map, filter, partition, foldl, foldr
+
+
+# Combine
+
+@docs union, diff, intersect
 
 -}
 
@@ -466,6 +472,7 @@ mapHelp fn node =
             RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
 
 
+{-| -}
 filter : (comparable -> value -> Bool) -> AVL comparable value -> AVL comparable value
 filter check =
     formTuple << foldl (filterHelp check) ( 0, nil )
@@ -482,6 +489,7 @@ filterHelp check key value (( count, root ) as acc) =
         acc
 
 
+{-| -}
 partition : (comparable -> value -> Bool) -> AVL comparable value -> ( AVL comparable value, AVL comparable value )
 partition check =
     Tuple.mapBoth formTuple formTuple << foldl (partitionHelp check) ( ( 0, nil ), ( 0, nil ) )
@@ -534,3 +542,25 @@ foldrHelp fn acc node =
 
         RBNode_elm_builtin _ k v l r ->
             foldrHelp fn (fn k v (foldrHelp fn acc r)) l
+
+
+
+-- C O M B I N E
+
+
+{-| -}
+union : AVL comparable value -> AVL comparable value -> AVL comparable value
+union first second =
+    foldl insert second first
+
+
+{-| -}
+intersect : AVL comparable value -> AVL comparable value -> AVL comparable value
+intersect first second =
+    filter (\key _ -> member key second) first
+
+
+{-| -}
+diff : AVL comparable value -> AVL comparable value -> AVL comparable value
+diff first second =
+    foldl (\key _ acc -> remove key acc) first second
