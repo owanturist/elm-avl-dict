@@ -61,11 +61,6 @@ leaf key value left right =
     RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-ins : Insertion key value -> Node key value
-ins { key, value, left, right } =
-    leaf key value left right
-
-
 
 -- C O N S T R U C T I O N
 
@@ -79,7 +74,7 @@ empty =
 {-| -}
 singleton : comparable -> value -> AVL comparable value
 singleton key value =
-    Internal.AVL 1 (leaf key value nil nil)
+    Internal.AVL 1 (RBNode_elm_builtin 1 key value nil nil)
 
 
 {-| -}
@@ -93,16 +88,16 @@ fromList keyValues =
 
 
 fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
-fromListHelper ( key, value ) ( count, node ) =
+fromListHelper ( key, value ) ( count, root ) =
     let
-        insertion =
-            insertHelp key value node
+        ( added, nextRoot ) =
+            insertHelp key value root
     in
-    if insertion.added then
-        ( count + 1, ins insertion )
+    if added then
+        ( count + 1, nextRoot )
 
     else
-        ( count, ins insertion )
+        ( count, nextRoot )
 
 
 
@@ -113,87 +108,107 @@ fromListHelper ( key, value ) ( count, node ) =
 insert : comparable -> value -> AVL comparable value -> AVL comparable value
 insert key value (Internal.AVL count root) =
     let
-        insertion =
+        ( added, nextRoot ) =
             insertHelp key value root
     in
-    if insertion.added then
-        Internal.AVL (count + 1) (ins insertion)
+    if added then
+        Internal.AVL (count + 1) nextRoot
 
     else
-        Internal.AVL count (ins insertion)
+        Internal.AVL count nextRoot
 
 
-type alias Insertion key value =
-    { added : Bool
-    , key : key
-    , value : value
-    , left : Node key value
-    , right : Node key value
-    }
-
-
-insertHelp : comparable -> value -> Node comparable value -> Insertion comparable value
+insertHelp : comparable -> value -> Node comparable value -> ( Bool, Node comparable value )
 insertHelp key value node =
     case node of
         RBEmpty_elm_builtin ->
-            Insertion True key value nil nil
+            ( True
+            , RBNode_elm_builtin 1 key value nil nil
+            )
 
-        RBNode_elm_builtin _ k v l r ->
+        RBNode_elm_builtin h k v l r ->
             case compare key k of
                 LT ->
                     let
-                        insertion =
+                        ( added, nextL ) =
                             insertHelp key value l
                     in
-                    -- equal to: 1 + (max heightInsertionLeft heightInsertionRight) - heightRight > 1
-                    if max (height insertion.left) (height insertion.right) > height r then
-                        rotateRight k v insertion r
-
-                    else
-                        Insertion insertion.added k v (ins insertion) r
+                    ( added
+                    , balance k v nextL r
+                    )
 
                 GT ->
                     let
-                        insertion =
+                        ( added, nextR ) =
                             insertHelp key value r
                     in
-                    -- equal to: heightLeft - (1 + (max heightInsertionLeft heightInsertionRight)) < 1
-                    if height l < max (height insertion.left) (height insertion.right) then
-                        rotateLeft k v l insertion
-
-                    else
-                        Insertion insertion.added k v l (ins insertion)
+                    ( added
+                    , balance k v l nextR
+                    )
 
                 EQ ->
-                    Insertion False key value l r
+                    ( False
+                    , RBNode_elm_builtin h key value l r
+                    )
 
 
-rotateLeft : comparable -> value -> Node comparable value -> Insertion comparable value -> Insertion comparable value
-rotateLeft pk pv pl insertion =
-    case insertion.left of
+balance : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+balance pk pv pl pr =
+    case ( pl, pr ) of
+        ( RBEmpty_elm_builtin, RBEmpty_elm_builtin ) ->
+            RBNode_elm_builtin 1 pk pv nil nil
+
+        ( RBNode_elm_builtin lh lk lv ll lr, RBEmpty_elm_builtin ) ->
+            if lh > 1 then
+                rotateRight pk pv lk lv ll lr pr
+
+            else
+                RBNode_elm_builtin (1 + lh) pk pv pl pr
+
+        ( RBEmpty_elm_builtin, RBNode_elm_builtin rh rk rv rl rr ) ->
+            if rh > 1 then
+                rotateLeft pk pv pl rk rv rl rr
+
+            else
+                RBNode_elm_builtin (1 + rh) pk pv pl pr
+
+        ( RBNode_elm_builtin lh lk lv ll lr, RBNode_elm_builtin rh rk rv rl rr ) ->
+            if lh - rh < -1 then
+                rotateLeft pk pv pl rk rv rl rr
+
+            else if lh - rh > 1 then
+                rotateRight pk pv lk lv ll lr pr
+
+            else
+                RBNode_elm_builtin (1 + max lh rh) pk pv pl pr
+
+
+rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateLeft pk pv pl rk rv rl rr =
+    case rl of
         RBEmpty_elm_builtin ->
-            Insertion True insertion.key insertion.value (leaf pk pv pl insertion.left) insertion.right
+            leaf rk rv (leaf pk pv pl rl) rr
 
         RBNode_elm_builtin lh lk lv ll lr ->
-            if lh > height insertion.right then
-                Insertion True lk lv (leaf pk pv pl ll) (leaf insertion.key insertion.value lr insertion.right)
+            if lh > height rr then
+                leaf lk lv (leaf pk pv pl ll) (leaf rk rv lr rr)
 
             else
-                Insertion True insertion.key insertion.value (leaf pk pv pl insertion.left) insertion.right
+                leaf rk rv (leaf pk pv pl rl) rr
 
 
-rotateRight : comparable -> value -> Insertion comparable value -> Node comparable value -> Insertion comparable value
-rotateRight pk pv insertion pr =
-    case insertion.right of
+rotateRight : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateRight pk pv lk lv ll lr pr =
+    case lr of
         RBEmpty_elm_builtin ->
-            Insertion True insertion.key insertion.value insertion.left (leaf pk pv insertion.right pr)
+            leaf lk lv ll (leaf pk pv lr pr)
 
         RBNode_elm_builtin rh rk rv rl rr ->
-            if height insertion.left < rh then
-                Insertion True rk rv (leaf insertion.key insertion.value insertion.left rl) (leaf pk pv rr pr)
+            if height ll < rh then
+                leaf rk rv (leaf lk lv ll rl) (leaf pk pv rr pr)
 
             else
-                Insertion True insertion.key insertion.value insertion.left (leaf pk pv insertion.right pr)
+                leaf lk lv ll (leaf pk pv lr pr)
 
 
 {-| -}
