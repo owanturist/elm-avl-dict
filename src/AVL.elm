@@ -1,6 +1,7 @@
 module AVL exposing
     ( AVL
     , empty, singleton, fromList
+    , keys, values, toList
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
     , map, foldl, foldr
@@ -17,6 +18,11 @@ module AVL exposing
 # Construction
 
 @docs empty, singleton, fromList
+
+
+# Deconstruct
+
+@docs keys, values, toList
 
 
 # Manipulation
@@ -104,6 +110,28 @@ fromListHelper ( key, value ) ( count, root ) =
 
     else
         ( count, nextRoot )
+
+
+
+-- D E C O N S T R U C T
+
+
+{-| -}
+keys : AVL key value -> List key
+keys =
+    foldr (\key _ acc -> key :: acc) []
+
+
+{-| -}
+values : AVL key value -> List value
+values =
+    foldr (\_ value acc -> value :: acc) []
+
+
+{-| -}
+toList : AVL key value -> List ( key, value )
+toList =
+    foldr (\key value acc -> ( key, value ) :: acc) []
 
 
 
