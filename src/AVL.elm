@@ -3,6 +3,7 @@ module AVL exposing
     , empty, singleton, fromList
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
+    , foldl, foldr
     )
 
 {-| An AVL Tree based dictionary.
@@ -26,6 +27,11 @@ module AVL exposing
 # Query
 
 @docs isEmpty, size, member, get, getMin, getMax
+
+
+# Transform
+
+@docs foldl, foldr
 
 -}
 
@@ -133,18 +139,14 @@ insertHelp key value node =
                         ( added, nextL ) =
                             insertHelp key value l
                     in
-                    ( added
-                    , balance k v nextL r
-                    )
+                    ( added, balance k v nextL r )
 
                 GT ->
                     let
                         ( added, nextR ) =
                             insertHelp key value r
                     in
-                    ( added
-                    , balance k v l nextR
-                    )
+                    ( added, balance k v l nextR )
 
                 EQ ->
                     ( False
@@ -152,7 +154,7 @@ insertHelp key value node =
                     )
 
 
-balance : comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+balance : key -> value -> Node key value -> Node key value -> Node key value
 balance pk pv pl pr =
     case ( pl, pr ) of
         ( RBEmpty_elm_builtin, RBEmpty_elm_builtin ) ->
@@ -183,7 +185,7 @@ balance pk pv pl pr =
                 RBNode_elm_builtin (1 + max lh rh) pk pv pl pr
 
 
-rotateLeft : comparable -> value -> Node comparable value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateLeft : key -> value -> Node key value -> key -> value -> Node key value -> Node key value -> Node key value
 rotateLeft pk pv pl rk rv rl rr =
     case rl of
         RBEmpty_elm_builtin ->
@@ -197,7 +199,7 @@ rotateLeft pk pv pl rk rv rl rr =
                 leaf rk rv (leaf pk pv pl rl) rr
 
 
-rotateRight : comparable -> value -> comparable -> value -> Node comparable value -> Node comparable value -> Node comparable value -> Node comparable value
+rotateRight : key -> value -> key -> value -> Node key value -> Node key value -> Node key value -> Node key value
 rotateRight pk pv lk lv ll lr pr =
     case lr of
         RBEmpty_elm_builtin ->
@@ -255,7 +257,7 @@ removeHelp key node =
 
 
 {-| -}
-removeMin : AVL comparable value -> AVL comparable value
+removeMin : AVL key value -> AVL key value
 removeMin ((Internal.AVL count root) as avl) =
     case removeMinHelp root of
         Nothing ->
@@ -265,7 +267,7 @@ removeMin ((Internal.AVL count root) as avl) =
             Internal.AVL (count - 1) nextRoot
 
 
-removeMinHelp : Node comparable value -> Maybe ( comparable, value, Node comparable value )
+removeMinHelp : Node key value -> Maybe ( key, value, Node key value )
 removeMinHelp node =
     case node of
         RBEmpty_elm_builtin ->
@@ -281,7 +283,7 @@ removeMinHelp node =
 
 
 {-| -}
-removeMax : AVL comparable value -> AVL comparable value
+removeMax : AVL key value -> AVL key value
 removeMax ((Internal.AVL count root) as avl) =
     case removeMaxHelp root of
         Nothing ->
@@ -291,7 +293,7 @@ removeMax ((Internal.AVL count root) as avl) =
             Internal.AVL (count - 1) nextRoot
 
 
-removeMaxHelp : Node comparable value -> Maybe ( comparable, value, Node comparable value )
+removeMaxHelp : Node key value -> Maybe ( key, value, Node key value )
 removeMaxHelp node =
     case node of
         RBEmpty_elm_builtin ->
@@ -374,12 +376,12 @@ getHelper target node =
 
 
 {-| -}
-getMin : AVL comparable value -> Maybe ( comparable, value )
+getMin : AVL key value -> Maybe ( key, value )
 getMin (Internal.AVL _ root) =
     getMinHelper root
 
 
-getMinHelper : Node comparable value -> Maybe ( comparable, value )
+getMinHelper : Node key value -> Maybe ( key, value )
 getMinHelper node =
     case node of
         RBEmpty_elm_builtin ->
@@ -395,12 +397,12 @@ getMinHelper node =
 
 
 {-| -}
-getMax : AVL comparable value -> Maybe ( comparable, value )
+getMax : AVL key value -> Maybe ( key, value )
 getMax (Internal.AVL _ root) =
     getMaxHelper root
 
 
-getMaxHelper : Node comparable value -> Maybe ( comparable, value )
+getMaxHelper : Node key value -> Maybe ( key, value )
 getMaxHelper node =
     case node of
         RBEmpty_elm_builtin ->
@@ -413,3 +415,39 @@ getMaxHelper node =
 
                 just ->
                     just
+
+
+
+-- T R A N S F O R M
+
+
+{-| -}
+foldl : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
+foldl fn acc (Internal.AVL _ root) =
+    foldlHelp fn acc root
+
+
+foldlHelp : (key -> value -> acc -> acc) -> acc -> Node key value -> acc
+foldlHelp fn acc node =
+    case node of
+        RBEmpty_elm_builtin ->
+            acc
+
+        RBNode_elm_builtin _ k v l r ->
+            foldlHelp fn (fn k v (foldlHelp fn acc l)) r
+
+
+{-| -}
+foldr : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
+foldr fn acc (Internal.AVL _ root) =
+    foldrHelp fn acc root
+
+
+foldrHelp : (key -> value -> acc -> acc) -> acc -> Node key value -> acc
+foldrHelp fn acc node =
+    case node of
+        RBEmpty_elm_builtin ->
+            acc
+
+        RBNode_elm_builtin _ k v l r ->
+            foldrHelp fn (fn k v (foldrHelp fn acc r)) l

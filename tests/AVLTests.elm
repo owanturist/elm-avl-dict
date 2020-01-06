@@ -473,3 +473,34 @@ sizeSuite =
                     |> AVL.size
                     |> Expect.equal (max 0 (List.length uniq - 1))
         ]
+
+
+
+-- T R A N S F O R M
+
+
+foldlSuite : Test
+foldlSuite =
+    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.foldl" <|
+        \list ->
+            AVL.fromList list
+                |> AVL.foldl (\k v acc -> ( k, v ) :: acc) []
+                |> Expect.equalLists
+                    (list
+                        |> List.Extra.uniqueBy Tuple.first
+                        |> List.sortBy Tuple.first
+                        |> List.reverse
+                    )
+
+
+foldrSuite : Test
+foldrSuite =
+    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.foldr" <|
+        \list ->
+            AVL.fromList list
+                |> AVL.foldr (\k v acc -> ( k, v ) :: acc) []
+                |> Expect.equalLists
+                    (list
+                        |> List.Extra.uniqueBy Tuple.first
+                        |> List.sortBy Tuple.first
+                    )
