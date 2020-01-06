@@ -205,6 +205,46 @@ insertSuite =
         ]
 
 
+removeMinSuite : Test
+removeMinSuite =
+    describe "AVL.removeMin"
+        [ test "AVL.empty" <|
+            \_ ->
+                AVL.empty
+                    |> AVL.removeMin
+                    |> validate identity
+                    |> Expect.ok
+
+        --
+        , fuzz2 Fuzz.char Fuzz.int "AVL.singleton" <|
+            \key value ->
+                AVL.singleton key value
+                    |> AVL.removeMin
+                    |> Expect.all
+                        [ Expect.ok << validate String.fromChar
+                        , Expect.equal False << AVL.member key
+                        ]
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.fromList" <|
+            \list ->
+                let
+                    avl =
+                        AVL.fromList list
+                in
+                Expect.all
+                    [ Expect.ok << validate String.fromChar
+                    , case AVL.getMin avl of
+                        Nothing ->
+                            always Expect.pass
+
+                        Just ( key, _ ) ->
+                            Expect.equal False << AVL.member key
+                    ]
+                    (AVL.removeMin avl)
+        ]
+
+
 
 -- Q U E R Y
 
@@ -260,4 +300,16 @@ sizeSuite =
                 AVL.fromList list
                     |> AVL.size
                     |> Expect.equal (List.length uniq)
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.removeMin" <|
+            \list ->
+                let
+                    uniq =
+                        List.Extra.uniqueBy Tuple.first list
+                in
+                AVL.fromList list
+                    |> AVL.removeMin
+                    |> AVL.size
+                    |> Expect.equal (max 0 (List.length uniq - 1))
         ]

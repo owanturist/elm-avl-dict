@@ -187,7 +187,7 @@ rotateLeft : comparable -> value -> Node comparable value -> comparable -> value
 rotateLeft pk pv pl rk rv rl rr =
     case rl of
         RBEmpty_elm_builtin ->
-            leaf rk rv (leaf pk pv pl rl) rr
+            leaf rk rv (RBNode_elm_builtin (1 + height pl) pk pv pl nil) rr
 
         RBNode_elm_builtin lh lk lv ll lr ->
             if lh > height rr then
@@ -201,7 +201,7 @@ rotateRight : comparable -> value -> comparable -> value -> Node comparable valu
 rotateRight pk pv lk lv ll lr pr =
     case lr of
         RBEmpty_elm_builtin ->
-            leaf lk lv ll (leaf pk pv lr pr)
+            leaf lk lv ll (RBNode_elm_builtin (1 + height pr) pk pv nil pr)
 
         RBNode_elm_builtin rh rk rv rl rr ->
             if height ll < rh then
@@ -240,6 +240,7 @@ removeHelp key node =
                     Nothing
 
 
+{-| -}
 removeMin : AVL comparable value -> AVL comparable value
 removeMin ((Internal.AVL count root) as avl) =
     case removeMinHelp root of
@@ -262,11 +263,7 @@ removeMinHelp node =
                     Just ( k, v, r )
 
                 Just ( rk, rv, nextL ) ->
-                    Just
-                        ( rk
-                        , rv
-                        , nextL
-                        )
+                    Just ( rk, rv, balance k v nextL r )
 
 
 
