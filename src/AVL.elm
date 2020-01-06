@@ -1,7 +1,7 @@
 module AVL exposing
     ( AVL
     , empty, singleton, fromList
-    , insert, remove, removeMin
+    , insert, remove, removeMin, removeMax
     , isEmpty, size, member, get, getMin, getMax
     )
 
@@ -20,7 +20,7 @@ module AVL exposing
 
 # Manipulation
 
-@docs insert, remove, removeMin
+@docs insert, remove, removeMin, removeMax
 
 
 # Query
@@ -266,6 +266,32 @@ removeMinHelp node =
                     Just ( rk, rv, balance k v nextL r )
 
 
+{-| -}
+removeMax : AVL comparable value -> AVL comparable value
+removeMax ((Internal.AVL count root) as avl) =
+    case removeMaxHelp root of
+        Nothing ->
+            avl
+
+        Just ( _, _, nextRoot ) ->
+            Internal.AVL (count - 1) nextRoot
+
+
+removeMaxHelp : Node comparable value -> Maybe ( comparable, value, Node comparable value )
+removeMaxHelp node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v l r ->
+            case removeMaxHelp r of
+                Nothing ->
+                    Just ( k, v, l )
+
+                Just ( rk, rv, nextR ) ->
+                    Just ( rk, rv, balance k v l nextR )
+
+
 
 -- Q U E R Y
 
@@ -346,7 +372,7 @@ getMaxHelper node =
             Nothing
 
         RBNode_elm_builtin _ k v _ r ->
-            case getMinHelper r of
+            case getMaxHelper r of
                 Nothing ->
                     Just ( k, v )
 
