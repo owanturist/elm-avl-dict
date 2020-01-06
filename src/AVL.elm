@@ -3,7 +3,7 @@ module AVL exposing
     , empty, singleton, fromList
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
-    , foldl, foldr
+    , map, foldl, foldr
     )
 
 {-| An AVL Tree based dictionary.
@@ -31,7 +31,7 @@ module AVL exposing
 
 # Transform
 
-@docs foldl, foldr
+@docs map, foldl, foldr
 
 -}
 
@@ -419,6 +419,22 @@ getMaxHelper node =
 
 
 -- T R A N S F O R M
+
+
+{-| -}
+map : (key -> a -> b) -> AVL key a -> AVL key b
+map fn (Internal.AVL count root) =
+    Internal.AVL count (mapHelp fn root)
+
+
+mapHelp : (key -> a -> b) -> Node key a -> Node key b
+mapHelp fn node =
+    case node of
+        RBEmpty_elm_builtin ->
+            RBEmpty_elm_builtin
+
+        RBNode_elm_builtin h k v l r ->
+            RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
 
 
 {-| -}
