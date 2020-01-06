@@ -231,13 +231,27 @@ removeHelp key node =
         RBNode_elm_builtin _ k v l r ->
             case compare key k of
                 LT ->
-                    Nothing
+                    Maybe.map (\nextL -> balance k v nextL r) (removeHelp key l)
 
                 GT ->
-                    Nothing
+                    Maybe.map (balance k v l) (removeHelp key r)
 
                 EQ ->
-                    Nothing
+                    if height l < height r then
+                        case removeMinHelp r of
+                            Nothing ->
+                                Just l
+
+                            Just ( minK, minV, nextR ) ->
+                                Just (leaf minK minV l nextR)
+
+                    else
+                        case removeMaxHelp l of
+                            Nothing ->
+                                Just r
+
+                            Just ( maxK, maxV, nextL ) ->
+                                Just (leaf maxK maxV nextL r)
 
 
 {-| -}

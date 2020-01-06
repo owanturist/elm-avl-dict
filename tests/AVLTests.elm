@@ -205,6 +205,46 @@ insertSuite =
         ]
 
 
+removeSuite : Test
+removeSuite =
+    describe "AVL.remove"
+        [ fuzz Fuzz.int "AVL.empty" <|
+            \key ->
+                AVL.empty
+                    |> AVL.remove key
+                    |> validate String.fromInt
+                    |> Expect.ok
+
+        --
+        , fuzz2 Fuzz.int Fuzz.int "AVL.singleton" <|
+            \put delete ->
+                AVL.singleton put ()
+                    |> AVL.remove delete
+                    |> validate String.fromInt
+                    |> Expect.ok
+
+        --
+        , fuzz2 (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) (Fuzz.list Fuzz.int) "AVL.fromList" <|
+            \puts deletes ->
+                List.foldl
+                    (\key -> Result.andThen (validate String.fromInt << AVL.remove key))
+                    (Ok (AVL.fromList puts))
+                    deletes
+                    |> Expect.ok
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "clear" <|
+            \list ->
+                List.foldl
+                    (\( key, _ ) -> Result.andThen (validate String.fromInt << AVL.remove key))
+                    (Ok (AVL.fromList list))
+                    list
+                    |> Result.map AVL.isEmpty
+                    |> Result.withDefault False
+                    |> Expect.equal True
+        ]
+
+
 removeMinSuite : Test
 removeMinSuite =
     describe "AVL.removeMin"
@@ -273,10 +313,9 @@ removeMinSuite =
                     (\_ -> Result.andThen (validate String.fromInt << AVL.removeMin))
                     (Ok (AVL.fromList list))
                     list
-                    |> Expect.all
-                        [ Expect.ok
-                        , Expect.equal True << Result.withDefault False << Result.map AVL.isEmpty
-                        ]
+                    |> Result.map AVL.isEmpty
+                    |> Result.withDefault False
+                    |> Expect.equal True
         ]
 
 
@@ -348,10 +387,9 @@ removeMaxSuite =
                     (\_ -> Result.andThen (validate String.fromInt << AVL.removeMax))
                     (Ok (AVL.fromList list))
                     list
-                    |> Expect.all
-                        [ Expect.ok
-                        , Expect.equal True << Result.withDefault False << Result.map AVL.isEmpty
-                        ]
+                    |> Result.map AVL.isEmpty
+                    |> Result.withDefault False
+                    |> Expect.equal True
         ]
 
 
