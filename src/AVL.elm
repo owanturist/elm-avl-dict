@@ -4,7 +4,7 @@ module AVL exposing
     , keys, values, toList
     , insert, remove, removeMin, removeMax, update
     , isEmpty, size, member, get, getMin, getMax
-    , map, foldl, foldr
+    , map, filter, foldl, foldr
     )
 
 {-| An AVL Tree based dictionary.
@@ -37,7 +37,7 @@ module AVL exposing
 
 # Transform
 
-@docs map, foldl, foldr
+@docs map, filter, foldl, foldr
 
 -}
 
@@ -463,6 +463,26 @@ mapHelp fn node =
 
         RBNode_elm_builtin h k v l r ->
             RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
+
+
+filter : (comparable -> value -> Bool) -> AVL comparable value -> AVL comparable value
+filter check avl =
+    let
+        ( count, root ) =
+            foldl (filterHelp check) ( 0, nil ) avl
+    in
+    Internal.AVL count root
+
+
+filterHelp : (comparable -> value -> Bool) -> comparable -> value -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
+filterHelp check key value ( count, root ) =
+    if check key value then
+        ( count + 1
+        , Tuple.second (insertHelp key value root)
+        )
+
+    else
+        ( count, root )
 
 
 {-| -}
