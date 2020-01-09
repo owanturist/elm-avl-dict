@@ -5,7 +5,7 @@ import Expect
 import Fuzz
 import Internal exposing (AVL(..), Node(..))
 import List.Extra
-import Test exposing (Test, describe, fuzz, fuzz2, fuzz3, test)
+import Test exposing (Test, describe, fuzz, fuzz2, test)
 
 
 draw : (key -> String) -> (value -> String) -> AVL key value -> String
@@ -245,154 +245,6 @@ removeSuite =
         ]
 
 
-removeMinSuite : Test
-removeMinSuite =
-    describe "AVL.removeMin"
-        [ test "AVL.empty" <|
-            \_ ->
-                AVL.empty
-                    |> AVL.removeMin
-                    |> validate identity
-                    |> Expect.ok
-
-        --
-        , fuzz2 Fuzz.char Fuzz.int "AVL.singleton" <|
-            \key value ->
-                AVL.singleton key value
-                    |> AVL.removeMin
-                    |> Expect.all
-                        [ Expect.ok << validate String.fromChar
-                        , Expect.equal Nothing << AVL.get key
-                        ]
-
-        --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.fromList" <|
-            \list ->
-                let
-                    avl =
-                        AVL.fromList list
-                in
-                Expect.all
-                    [ Expect.ok << validate String.fromChar
-                    , case AVL.getMin avl of
-                        Nothing ->
-                            always Expect.pass
-
-                        Just ( key, _ ) ->
-                            Expect.equal Nothing << AVL.get key
-                    ]
-                    (AVL.removeMin avl)
-
-        --
-        , fuzz3
-            (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange -1000 0))
-            (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange 1 1000)))
-            (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange 1 1000)))
-            "AVL.fromList + AVL.insert"
-          <|
-            \( minKey, minValue ) left right ->
-                (left ++ ( minKey, minValue ) :: right)
-                    |> AVL.fromList
-                    |> AVL.removeMin
-                    |> Expect.all
-                        [ Expect.ok << validate String.fromInt
-                        , Expect.equal Nothing << AVL.get minKey
-                        ]
-
-        --
-        , fuzz
-            (Fuzz.map2 List.range
-                (Fuzz.intRange -400 -100)
-                (Fuzz.intRange 100 400)
-                |> Fuzz.map (List.indexedMap Tuple.pair)
-            )
-            "clear"
-          <|
-            \list ->
-                List.foldl
-                    (\_ -> Result.andThen (validate String.fromInt << AVL.removeMin))
-                    (Ok (AVL.fromList list))
-                    list
-                    |> Result.map AVL.isEmpty
-                    |> Result.withDefault False
-                    |> Expect.equal True
-        ]
-
-
-removeMaxSuite : Test
-removeMaxSuite =
-    describe "AVL.removeMax"
-        [ test "AVL.empty" <|
-            \_ ->
-                AVL.empty
-                    |> AVL.removeMax
-                    |> validate identity
-                    |> Expect.ok
-
-        --
-        , fuzz2 Fuzz.char Fuzz.int "AVL.singleton" <|
-            \key value ->
-                AVL.singleton key value
-                    |> AVL.removeMax
-                    |> Expect.all
-                        [ Expect.ok << validate String.fromChar
-                        , Expect.equal Nothing << AVL.get key
-                        ]
-
-        --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.string ))) "AVL.fromList" <|
-            \list ->
-                let
-                    avl =
-                        AVL.fromList list
-                in
-                Expect.all
-                    [ Expect.ok << validate String.fromInt
-                    , case AVL.getMax avl of
-                        Nothing ->
-                            always Expect.pass
-
-                        Just ( key, _ ) ->
-                            Expect.equal Nothing << AVL.get key
-                    ]
-                    (AVL.removeMax avl)
-
-        --
-        , fuzz3
-            (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange 1001 2000))
-            (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange 1 1000)))
-            (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) (Fuzz.intRange 1 1000)))
-            "AVL.fromList + AVL.insert"
-          <|
-            \( maxKey, maxValue ) left right ->
-                (left ++ ( maxKey, maxValue ) :: right)
-                    |> AVL.fromList
-                    |> AVL.removeMax
-                    |> Expect.all
-                        [ Expect.ok << validate String.fromInt
-                        , Expect.equal Nothing << AVL.get maxKey
-                        ]
-
-        --
-        , fuzz
-            (Fuzz.map2 List.range
-                (Fuzz.intRange -400 -100)
-                (Fuzz.intRange 100 400)
-                |> Fuzz.map (List.indexedMap Tuple.pair)
-            )
-            "clear"
-          <|
-            \list ->
-                List.foldl
-                    (\_ -> Result.andThen (validate String.fromInt << AVL.removeMax))
-                    (Ok (AVL.fromList list))
-                    list
-                    |> Result.map AVL.isEmpty
-                    |> Result.withDefault False
-                    |> Expect.equal True
-        ]
-
-
 
 -- Q U E R Y
 
@@ -448,30 +300,6 @@ sizeSuite =
                 AVL.fromList list
                     |> AVL.size
                     |> Expect.equal (List.length uniq)
-
-        --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.removeMin" <|
-            \list ->
-                let
-                    uniq =
-                        List.Extra.uniqueBy Tuple.first list
-                in
-                AVL.fromList list
-                    |> AVL.removeMin
-                    |> AVL.size
-                    |> Expect.equal (max 0 (List.length uniq - 1))
-
-        --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.removeMax" <|
-            \list ->
-                let
-                    uniq =
-                        List.Extra.uniqueBy Tuple.first list
-                in
-                AVL.fromList list
-                    |> AVL.removeMax
-                    |> AVL.size
-                    |> Expect.equal (max 0 (List.length uniq - 1))
         ]
 
 

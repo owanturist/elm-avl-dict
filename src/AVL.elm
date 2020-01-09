@@ -2,10 +2,10 @@ module AVL exposing
     ( AVL
     , empty, singleton, fromList
     , keys, values, toList
-    , insert, remove, removeMin, removeMax, update
-    , isEmpty, size, member, get, getMin, getMax
+    , insert, remove, update
+    , isEmpty, size, member, get
     , map, filter, partition, foldl, foldr
-    , union, diff, intersect
+    , union, diff, intersect, merge
     )
 
 {-| An AVL Tree based dictionary.
@@ -28,12 +28,12 @@ module AVL exposing
 
 # Manipulation
 
-@docs insert, remove, removeMin, removeMax, update
+@docs insert, remove, update
 
 
 # Query
 
-@docs isEmpty, size, member, get, getMin, getMax
+@docs isEmpty, size, member, get
 
 
 # Transform
@@ -43,7 +43,7 @@ module AVL exposing
 
 # Combine
 
-@docs union, diff, intersect
+@docs union, diff, intersect, merge
 
 -}
 
@@ -65,8 +65,8 @@ height node =
         RBEmpty_elm_builtin ->
             0
 
-        RBNode_elm_builtin x _ _ _ _ ->
-            x
+        RBNode_elm_builtin h _ _ _ _ ->
+            h
 
 
 nil : Node key value
@@ -79,8 +79,8 @@ leaf key value left right =
     RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-formTuple : ( Int, Node key value ) -> AVL key value
-formTuple ( count, root ) =
+untuple : ( Int, Node key value ) -> AVL key value
+untuple ( count, root ) =
     Internal.AVL count root
 
 
@@ -102,8 +102,8 @@ singleton key value =
 
 {-| -}
 fromList : List ( comparable, value ) -> AVL comparable value
-fromList =
-    formTuple << List.foldl fromListHelper ( 0, nil )
+fromList list =
+    untuple (List.foldl fromListHelper ( 0, nil ) list)
 
 
 fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
@@ -125,20 +125,35 @@ fromListHelper ( key, value ) ( count, root ) =
 
 {-| -}
 keys : AVL key value -> List key
-keys =
-    foldr (\key _ acc -> key :: acc) []
+keys avl =
+    let
+        step : key -> value -> List key -> List key
+        step key _ acc =
+            key :: acc
+    in
+    foldr step [] avl
 
 
 {-| -}
 values : AVL key value -> List value
-values =
-    foldr (\_ value acc -> value :: acc) []
+values avl =
+    let
+        step : key -> value -> List value -> List value
+        step _ value acc =
+            value :: acc
+    in
+    foldr step [] avl
 
 
 {-| -}
 toList : AVL key value -> List ( key, value )
-toList =
-    foldr (\key value acc -> ( key, value ) :: acc) []
+toList avl =
+    let
+        step : key -> value -> List ( key, value ) -> List ( key, value )
+        step key value acc =
+            ( key, value ) :: acc
+    in
+    foldr step [] avl
 
 
 
@@ -275,7 +290,7 @@ removeHelp key node =
 
                 EQ ->
                     if height l < height r then
-                        case removeMinHelp r of
+                        case removeMin r of
                             Nothing ->
                                 Just l
 
@@ -283,7 +298,7 @@ removeHelp key node =
                                 Just (leaf minK minV l nextR)
 
                     else
-                        case removeMaxHelp l of
+                        case removeMax l of
                             Nothing ->
                                 Just r
 
@@ -291,25 +306,14 @@ removeHelp key node =
                                 Just (leaf maxK maxV nextL r)
 
 
-{-| -}
-removeMin : AVL key value -> AVL key value
-removeMin ((Internal.AVL count root) as avl) =
-    case removeMinHelp root of
-        Nothing ->
-            avl
-
-        Just ( _, _, nextRoot ) ->
-            Internal.AVL (count - 1) nextRoot
-
-
-removeMinHelp : Node key value -> Maybe ( key, value, Node key value )
-removeMinHelp node =
+removeMin : Node key value -> Maybe ( key, value, Node key value )
+removeMin node =
     case node of
         RBEmpty_elm_builtin ->
             Nothing
 
         RBNode_elm_builtin _ k v l r ->
-            case removeMinHelp l of
+            case removeMin l of
                 Nothing ->
                     Just ( k, v, r )
 
@@ -317,25 +321,14 @@ removeMinHelp node =
                     Just ( rk, rv, balance k v nextL r )
 
 
-{-| -}
-removeMax : AVL key value -> AVL key value
-removeMax ((Internal.AVL count root) as avl) =
-    case removeMaxHelp root of
-        Nothing ->
-            avl
-
-        Just ( _, _, nextRoot ) ->
-            Internal.AVL (count - 1) nextRoot
-
-
-removeMaxHelp : Node key value -> Maybe ( key, value, Node key value )
-removeMaxHelp node =
+removeMax : Node key value -> Maybe ( key, value, Node key value )
+removeMax node =
     case node of
         RBEmpty_elm_builtin ->
             Nothing
 
         RBNode_elm_builtin _ k v l r ->
-            case removeMaxHelp r of
+            case removeMax r of
                 Nothing ->
                     Just ( k, v, l )
 
@@ -410,48 +403,6 @@ getHelper target node =
                     Just value
 
 
-{-| -}
-getMin : AVL key value -> Maybe ( key, value )
-getMin (Internal.AVL _ root) =
-    getMinHelper root
-
-
-getMinHelper : Node key value -> Maybe ( key, value )
-getMinHelper node =
-    case node of
-        RBEmpty_elm_builtin ->
-            Nothing
-
-        RBNode_elm_builtin _ k v l _ ->
-            case getMinHelper l of
-                Nothing ->
-                    Just ( k, v )
-
-                just ->
-                    just
-
-
-{-| -}
-getMax : AVL key value -> Maybe ( key, value )
-getMax (Internal.AVL _ root) =
-    getMaxHelper root
-
-
-getMaxHelper : Node key value -> Maybe ( key, value )
-getMaxHelper node =
-    case node of
-        RBEmpty_elm_builtin ->
-            Nothing
-
-        RBNode_elm_builtin _ k v _ r ->
-            case getMaxHelper r of
-                Nothing ->
-                    Just ( k, v )
-
-                just ->
-                    just
-
-
 
 -- T R A N S F O R M
 
@@ -474,42 +425,42 @@ mapHelp fn node =
 
 {-| -}
 filter : (comparable -> value -> Bool) -> AVL comparable value -> AVL comparable value
-filter check =
-    formTuple << foldl (filterHelp check) ( 0, nil )
+filter check avl =
+    let
+        step : comparable -> value -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
+        step key value (( count, root ) as acc) =
+            if check key value then
+                ( count + 1
+                , Tuple.second (insertHelp key value root)
+                )
 
-
-filterHelp : (comparable -> value -> Bool) -> comparable -> value -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
-filterHelp check key value (( count, root ) as acc) =
-    if check key value then
-        ( count + 1
-        , Tuple.second (insertHelp key value root)
-        )
-
-    else
-        acc
+            else
+                acc
+    in
+    untuple (foldl step ( 0, nil ) avl)
 
 
 {-| -}
 partition : (comparable -> value -> Bool) -> AVL comparable value -> ( AVL comparable value, AVL comparable value )
-partition check =
-    Tuple.mapBoth formTuple formTuple << foldl (partitionHelp check) ( ( 0, nil ), ( 0, nil ) )
+partition check avl =
+    let
+        step : comparable -> value -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) ) -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) )
+        step key value ( ( leftCount, leftRoot ) as left, ( rightCount, rightRoot ) as right ) =
+            if check key value then
+                ( ( leftCount + 1
+                  , Tuple.second (insertHelp key value leftRoot)
+                  )
+                , right
+                )
 
-
-partitionHelp : (comparable -> value -> Bool) -> comparable -> value -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) ) -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) )
-partitionHelp check key value ( ( leftCount, leftRoot ) as left, ( rightCount, rightRoot ) as right ) =
-    if check key value then
-        ( ( leftCount + 1
-          , Tuple.second (insertHelp key value leftRoot)
-          )
-        , right
-        )
-
-    else
-        ( left
-        , ( rightCount + 1
-          , Tuple.second (insertHelp key value rightRoot)
-          )
-        )
+            else
+                ( left
+                , ( rightCount + 1
+                  , Tuple.second (insertHelp key value rightRoot)
+                  )
+                )
+    in
+    Tuple.mapBoth untuple untuple (foldl step ( ( 0, nil ), ( 0, nil ) ) avl)
 
 
 {-| -}
@@ -550,17 +501,40 @@ foldrHelp fn acc node =
 
 {-| -}
 union : AVL comparable value -> AVL comparable value -> AVL comparable value
-union first second =
-    foldl insert second first
+union left right =
+    foldl insert right left
 
 
 {-| -}
 intersect : AVL comparable value -> AVL comparable value -> AVL comparable value
-intersect first second =
-    filter (\key _ -> member key second) first
+intersect left right =
+    let
+        step : comparable -> value -> Bool
+        step key _ =
+            member key right
+    in
+    filter step left
 
 
 {-| -}
 diff : AVL comparable value -> AVL comparable value -> AVL comparable value
-diff first second =
-    foldl (\key _ acc -> remove key acc) first second
+diff left right =
+    let
+        step : comparable -> value -> AVL comparable value -> AVL comparable value
+        step key _ acc =
+            remove key acc
+    in
+    foldl step left right
+
+
+{-| -}
+merge :
+    (comparable -> a -> acc -> acc)
+    -> (comparable -> a -> b -> acc -> acc)
+    -> (comparable -> b -> acc -> acc)
+    -> AVL comparable a
+    -> AVL comparable b
+    -> acc
+    -> acc
+merge onLeft onBoth onRight left right acc =
+    acc
