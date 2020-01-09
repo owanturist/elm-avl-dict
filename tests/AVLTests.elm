@@ -9,7 +9,7 @@ import Test exposing (Test, describe, fuzz, fuzz2, test)
 
 
 draw : (key -> String) -> (value -> String) -> AVL key value -> String
-draw keyToString valueToString (AVL _ root) =
+draw keyToString valueToString (AVL _ _ root) =
     String.join "\n" (drawHelp keyToString valueToString root)
 
 
@@ -50,11 +50,11 @@ drawHelp keyToString valueToString node =
 
 
 validate : (comparable -> String) -> AVL comparable value -> Result String (AVL comparable value)
-validate keyToString (AVL size root) =
+validate keyToString (AVL comparator size root) =
     Result.andThen
         (\( _, s ) ->
             if s == size then
-                Ok (AVL size root)
+                Ok (AVL comparator size root)
 
             else
                 Err ("tracking size [" ++ String.fromInt size ++ "] does not match with real one [" ++ String.fromInt s ++ "]")

@@ -1,8 +1,9 @@
 module AVL exposing
     ( AVL
-    , empty, singleton, fromList
+    , Comparator
+    , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
-    , insert, remove, update
+    , insert, remove, update, clear
     , isEmpty, size, member, get
     , map, filter, partition, foldl, foldr
     , union, diff, intersect, merge
@@ -18,7 +19,8 @@ module AVL exposing
 
 # Construction
 
-@docs empty, singleton, fromList
+@docs Comparator
+@docs empty, emptyWith, singleton, singletonWith, fromList, fromListWith
 
 
 # Deconstruct
@@ -28,7 +30,7 @@ module AVL exposing
 
 # Manipulation
 
-@docs insert, remove, update
+@docs insert, remove, update, clear
 
 
 # Query
@@ -55,6 +57,11 @@ type alias AVL key value =
     Internal.AVL key value
 
 
+{-| -}
+type alias Comparator key =
+    key -> key -> Order
+
+
 
 -- U T I L S
 
@@ -79,9 +86,9 @@ leaf key value left right =
     RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-untuple : ( Int, Node key value ) -> AVL key value
-untuple ( count, root ) =
-    Internal.AVL count root
+untuple : Comparator key -> ( Int, Node key value ) -> AVL key value
+untuple comparator ( count, root ) =
+    Internal.AVL comparator count root
 
 
 
@@ -89,34 +96,52 @@ untuple ( count, root ) =
 
 
 {-| -}
+emptyWith : Comparator key -> AVL key value
+emptyWith comparator =
+    Internal.AVL comparator 0 nil
+
+
+{-| -}
 empty : AVL comparable value
 empty =
-    Internal.AVL 0 nil
+    emptyWith compare
+
+
+{-| -}
+singletonWith : Comparator key -> key -> value -> AVL key value
+singletonWith comparator key value =
+    Internal.AVL comparator 1 (RBNode_elm_builtin 1 key value nil nil)
 
 
 {-| -}
 singleton : comparable -> value -> AVL comparable value
-singleton key value =
-    Internal.AVL 1 (RBNode_elm_builtin 1 key value nil nil)
+singleton =
+    singletonWith compare
 
 
 {-| -}
-fromList : List ( comparable, value ) -> AVL comparable value
-fromList list =
-    untuple (List.foldl fromListHelper ( 0, nil ) list)
+fromListWith : Comparator key -> List ( key, value ) -> AVL key value
+fromListWith comparator list =
+    untuple comparator (List.foldl (fromListHelper comparator) ( 0, nil ) list)
 
 
-fromListHelper : ( comparable, value ) -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
-fromListHelper ( key, value ) ( count, root ) =
+fromListHelper : Comparator key -> ( key, value ) -> ( Int, Node key value ) -> ( Int, Node key value )
+fromListHelper comparator ( key, value ) ( count, root ) =
     let
         ( added, nextRoot ) =
-            insertHelp key value root
+            insertHelp comparator key value root
     in
     if added then
         ( count + 1, nextRoot )
 
     else
         ( count, nextRoot )
+
+
+{-| -}
+fromList : List ( comparable, value ) -> AVL comparable value
+fromList =
+    fromListWith compare
 
 
 
@@ -161,21 +186,21 @@ toList avl =
 
 
 {-| -}
-insert : comparable -> value -> AVL comparable value -> AVL comparable value
-insert key value (Internal.AVL count root) =
+insert : key -> value -> AVL key value -> AVL key value
+insert key value (Internal.AVL comparator count root) =
     let
         ( added, nextRoot ) =
-            insertHelp key value root
+            insertHelp comparator key value root
     in
     if added then
-        Internal.AVL (count + 1) nextRoot
+        Internal.AVL comparator (count + 1) nextRoot
 
     else
-        Internal.AVL count nextRoot
+        Internal.AVL comparator count nextRoot
 
 
-insertHelp : comparable -> value -> Node comparable value -> ( Bool, Node comparable value )
-insertHelp key value node =
+insertHelp : Comparator key -> key -> value -> Node key value -> ( Bool, Node key value )
+insertHelp comparator key value node =
     case node of
         RBEmpty_elm_builtin ->
             ( True
@@ -183,18 +208,18 @@ insertHelp key value node =
             )
 
         RBNode_elm_builtin h k v l r ->
-            case compare key k of
+            case comparator key k of
                 LT ->
                     let
                         ( added, nextL ) =
-                            insertHelp key value l
+                            insertHelp comparator key value l
                     in
                     ( added, balance k v nextL r )
 
                 GT ->
                     let
                         ( added, nextR ) =
-                            insertHelp key value r
+                            insertHelp comparator key value r
                     in
                     ( added, balance k v l nextR )
 
@@ -264,29 +289,29 @@ rotateRight pk pv lk lv ll lr pr =
 
 
 {-| -}
-remove : comparable -> AVL comparable value -> AVL comparable value
-remove key ((Internal.AVL count root) as avl) =
-    case removeHelp key root of
+remove : key -> AVL key value -> AVL key value
+remove key ((Internal.AVL comparator count root) as avl) =
+    case removeHelp comparator key root of
         Nothing ->
             avl
 
         Just nextRoot ->
-            Internal.AVL (count - 1) nextRoot
+            Internal.AVL comparator (count - 1) nextRoot
 
 
-removeHelp : comparable -> Node comparable value -> Maybe (Node comparable value)
-removeHelp key node =
+removeHelp : Comparator key -> key -> Node key value -> Maybe (Node key value)
+removeHelp comparator key node =
     case node of
         RBEmpty_elm_builtin ->
             Nothing
 
         RBNode_elm_builtin _ k v l r ->
-            case compare key k of
+            case comparator key k of
                 LT ->
-                    Maybe.map (\nextL -> balance k v nextL r) (removeHelp key l)
+                    Maybe.map (\nextL -> balance k v nextL r) (removeHelp comparator key l)
 
                 GT ->
-                    Maybe.map (balance k v l) (removeHelp key r)
+                    Maybe.map (balance k v l) (removeHelp comparator key r)
 
                 EQ ->
                     if height l < height r then
@@ -337,7 +362,7 @@ removeMax node =
 
 
 {-| -}
-update : comparable -> (Maybe value -> Maybe value) -> AVL comparable value -> AVL comparable value
+update : key -> (Maybe value -> Maybe value) -> AVL key value -> AVL key value
 update key transform avl =
     case get key avl of
         Nothing ->
@@ -357,6 +382,12 @@ update key transform avl =
                     insert key value avl
 
 
+{-| -}
+clear : AVL key value -> AVL key value
+clear (Internal.AVL comparator _ _) =
+    emptyWith comparator
+
+
 
 -- Q U E R Y
 
@@ -369,35 +400,35 @@ isEmpty avl =
 
 {-| -}
 size : AVL key value -> Int
-size (Internal.AVL count _) =
+size (Internal.AVL _ count _) =
     count
 
 
 {-| -}
-member : comparable -> AVL comparable value -> Bool
+member : key -> AVL key value -> Bool
 member key avl =
     get key avl /= Nothing
 
 
 {-| -}
-get : comparable -> AVL comparable value -> Maybe value
-get key (Internal.AVL _ root) =
-    getHelper key root
+get : key -> AVL key value -> Maybe value
+get key (Internal.AVL comparator _ root) =
+    getHelper comparator key root
 
 
-getHelper : comparable -> Node comparable value -> Maybe value
-getHelper target node =
+getHelper : Comparator key -> key -> Node key value -> Maybe value
+getHelper comparator target node =
     case node of
         RBEmpty_elm_builtin ->
             Nothing
 
         RBNode_elm_builtin _ key value left right ->
-            case compare target key of
+            case comparator target key of
                 LT ->
-                    getHelper target left
+                    getHelper comparator target left
 
                 GT ->
-                    getHelper target right
+                    getHelper comparator target right
 
                 EQ ->
                     Just value
@@ -409,8 +440,8 @@ getHelper target node =
 
 {-| -}
 map : (key -> a -> b) -> AVL key a -> AVL key b
-map fn (Internal.AVL count root) =
-    Internal.AVL count (mapHelp fn root)
+map fn (Internal.AVL comparator count root) =
+    Internal.AVL comparator count (mapHelp fn root)
 
 
 mapHelp : (key -> a -> b) -> Node key a -> Node key b
@@ -424,31 +455,31 @@ mapHelp fn node =
 
 
 {-| -}
-filter : (comparable -> value -> Bool) -> AVL comparable value -> AVL comparable value
-filter check avl =
+filter : (key -> value -> Bool) -> AVL key value -> AVL key value
+filter check (Internal.AVL comparator _ root) =
     let
-        step : comparable -> value -> ( Int, Node comparable value ) -> ( Int, Node comparable value )
-        step key value (( count, root ) as acc) =
+        step : key -> value -> ( Int, Node key value ) -> ( Int, Node key value )
+        step key value (( count, node ) as acc) =
             if check key value then
                 ( count + 1
-                , Tuple.second (insertHelp key value root)
+                , Tuple.second (insertHelp comparator key value node)
                 )
 
             else
                 acc
     in
-    untuple (foldl step ( 0, nil ) avl)
+    untuple comparator (foldlHelp step ( 0, nil ) root)
 
 
 {-| -}
-partition : (comparable -> value -> Bool) -> AVL comparable value -> ( AVL comparable value, AVL comparable value )
-partition check avl =
+partition : (key -> value -> Bool) -> AVL key value -> ( AVL key value, AVL key value )
+partition check (Internal.AVL comparator _ root) =
     let
-        step : comparable -> value -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) ) -> ( ( Int, Node comparable value ), ( Int, Node comparable value ) )
+        step : key -> value -> ( ( Int, Node key value ), ( Int, Node key value ) ) -> ( ( Int, Node key value ), ( Int, Node key value ) )
         step key value ( ( leftCount, leftRoot ) as left, ( rightCount, rightRoot ) as right ) =
             if check key value then
                 ( ( leftCount + 1
-                  , Tuple.second (insertHelp key value leftRoot)
+                  , Tuple.second (insertHelp comparator key value leftRoot)
                   )
                 , right
                 )
@@ -456,16 +487,19 @@ partition check avl =
             else
                 ( left
                 , ( rightCount + 1
-                  , Tuple.second (insertHelp key value rightRoot)
+                  , Tuple.second (insertHelp comparator key value rightRoot)
                   )
                 )
     in
-    Tuple.mapBoth untuple untuple (foldl step ( ( 0, nil ), ( 0, nil ) ) avl)
+    Tuple.mapBoth
+        (untuple comparator)
+        (untuple comparator)
+        (foldlHelp step ( ( 0, nil ), ( 0, nil ) ) root)
 
 
 {-| -}
 foldl : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
-foldl fn acc (Internal.AVL _ root) =
+foldl fn acc (Internal.AVL _ _ root) =
     foldlHelp fn acc root
 
 
@@ -481,7 +515,7 @@ foldlHelp fn acc node =
 
 {-| -}
 foldr : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
-foldr fn acc (Internal.AVL _ root) =
+foldr fn acc (Internal.AVL _ _ root) =
     foldrHelp fn acc root
 
 
@@ -500,16 +534,16 @@ foldrHelp fn acc node =
 
 
 {-| -}
-union : AVL comparable value -> AVL comparable value -> AVL comparable value
+union : AVL key value -> AVL key value -> AVL key value
 union left right =
     foldl insert right left
 
 
 {-| -}
-intersect : AVL comparable value -> AVL comparable value -> AVL comparable value
+intersect : AVL key value -> AVL key value -> AVL key value
 intersect left right =
     let
-        step : comparable -> value -> Bool
+        step : key -> value -> Bool
         step key _ =
             member key right
     in
@@ -517,10 +551,10 @@ intersect left right =
 
 
 {-| -}
-diff : AVL comparable value -> AVL comparable value -> AVL comparable value
+diff : AVL key value -> AVL key value -> AVL key value
 diff left right =
     let
-        step : comparable -> value -> AVL comparable value -> AVL comparable value
+        step : key -> value -> AVL key value -> AVL key value
         step key _ acc =
             remove key acc
     in
@@ -529,16 +563,16 @@ diff left right =
 
 {-| -}
 merge :
-    (comparable -> left -> acc -> acc)
-    -> (comparable -> left -> right -> acc -> acc)
-    -> (comparable -> right -> acc -> acc)
-    -> AVL comparable left
-    -> AVL comparable right
+    (key -> left -> acc -> acc)
+    -> (key -> left -> right -> acc -> acc)
+    -> (key -> right -> acc -> acc)
+    -> AVL key left
+    -> AVL key right
     -> acc
     -> acc
-merge onLeft onBoth onRight left right acc =
+merge onLeft onBoth onRight left (Internal.AVL comparator _ right) acc =
     let
-        stepAll : comparable -> right -> ( List ( comparable, left ), acc ) -> ( List ( comparable, left ), acc )
+        stepAll : key -> right -> ( List ( key, left ), acc ) -> ( List ( key, left ), acc )
         stepAll rk rv ( list, semiacc ) =
             case list of
                 [] ->
@@ -547,7 +581,7 @@ merge onLeft onBoth onRight left right acc =
                     )
 
                 ( lk, lv ) :: rest ->
-                    case compare lk rk of
+                    case comparator lk rk of
                         LT ->
                             stepAll rk rv ( rest, onLeft lk lv semiacc )
 
@@ -561,11 +595,11 @@ merge onLeft onBoth onRight left right acc =
                             , onBoth lk lv rv semiacc
                             )
 
-        stepOverLeft : ( comparable, left ) -> acc -> acc
+        stepOverLeft : ( key, left ) -> acc -> acc
         stepOverLeft ( lk, lv ) semiacc =
             onLeft lk lv semiacc
 
         ( leftovers, accAll ) =
-            foldl stepAll ( toList left, acc ) right
+            foldlHelp stepAll ( toList left, acc ) right
     in
     List.foldl stepOverLeft accAll leftovers

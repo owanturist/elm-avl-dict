@@ -2,7 +2,7 @@ module Internal exposing (AVL(..), Node(..))
 
 
 type AVL key value
-    = AVL Int (Node key value)
+    = AVL (key -> key -> Order) Int (Node key value)
 
 
 type Node key value
