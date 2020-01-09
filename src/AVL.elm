@@ -529,12 +529,43 @@ diff left right =
 
 {-| -}
 merge :
-    (comparable -> a -> acc -> acc)
-    -> (comparable -> a -> b -> acc -> acc)
-    -> (comparable -> b -> acc -> acc)
-    -> AVL comparable a
-    -> AVL comparable b
+    (comparable -> left -> acc -> acc)
+    -> (comparable -> left -> right -> acc -> acc)
+    -> (comparable -> right -> acc -> acc)
+    -> AVL comparable left
+    -> AVL comparable right
     -> acc
     -> acc
 merge onLeft onBoth onRight left right acc =
-    acc
+    let
+        stepAll : comparable -> right -> ( List ( comparable, left ), acc ) -> ( List ( comparable, left ), acc )
+        stepAll rk rv ( list, semiacc ) =
+            case list of
+                [] ->
+                    ( []
+                    , onRight rk rv semiacc
+                    )
+
+                ( lk, lv ) :: rest ->
+                    case compare lk rk of
+                        LT ->
+                            stepAll rk rv ( rest, onLeft lk lv semiacc )
+
+                        GT ->
+                            ( list
+                            , onRight rk rv semiacc
+                            )
+
+                        EQ ->
+                            ( rest
+                            , onBoth lk lv rv semiacc
+                            )
+
+        stepOverLeft : ( comparable, left ) -> acc -> acc
+        stepOverLeft ( lk, lv ) semiacc =
+            onLeft lk lv semiacc
+
+        ( leftovers, accAll ) =
+            foldl stepAll ( toList left, acc ) right
+    in
+    List.foldl stepOverLeft accAll leftovers
