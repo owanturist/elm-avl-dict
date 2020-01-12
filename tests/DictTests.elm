@@ -642,3 +642,23 @@ foldrSuite =
                         |> List.Extra.uniqueBy Tuple.first
                         |> List.sortBy Tuple.first
                     )
+
+
+filterSuite : Test
+filterSuite =
+    test "AVL.Dict.filter" <|
+        \_ ->
+            [ ( 3, 'A' )
+            , ( 1, 'B' )
+            , ( 4, 'C' )
+            , ( 5, 'D' )
+            , ( 2, 'E' )
+            ]
+                |> Dict.fromList
+                |> Dict.filter (\key value -> key > 3 || value == 'B')
+                |> Dict.toList
+                |> Expect.equalLists
+                    [ ( 1, 'B' )
+                    , ( 4, 'C' )
+                    , ( 5, 'D' )
+                    ]
