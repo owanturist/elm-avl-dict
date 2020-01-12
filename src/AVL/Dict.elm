@@ -494,7 +494,8 @@ mapHelp fn node =
             RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
 
 
-{-| -}
+{-| Keep only the key-value pairs that pass the given test.
+-}
 filter : (key -> value -> Bool) -> Dict key value -> Dict key value
 filter check (Internal.AVL comparator _ root) =
     let
@@ -511,7 +512,10 @@ filter check (Internal.AVL comparator _ root) =
     untuple comparator (foldlHelp step ( 0, nil ) root)
 
 
-{-| -}
+{-| Partition a dictionary according to some test.
+The first dictionary contains all key-value pairs which passed the test,
+and the second contains the pairs that did not.
+-}
 partition : (key -> value -> Bool) -> Dict key value -> ( Dict key value, Dict key value )
 partition check (Internal.AVL comparator _ root) =
     let

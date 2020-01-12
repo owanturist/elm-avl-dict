@@ -662,3 +662,27 @@ filterSuite =
                     , ( 4, 'C' )
                     , ( 5, 'D' )
                     ]
+
+
+partitionSuite : Test
+partitionSuite =
+    test "AVL.Dict.partition" <|
+        \_ ->
+            [ ( 3, 'A' )
+            , ( 1, 'B' )
+            , ( 4, 'C' )
+            , ( 5, 'D' )
+            , ( 2, 'E' )
+            ]
+                |> Dict.fromList
+                |> Dict.partition (\key value -> key > 3 || value == 'B')
+                |> Tuple.mapBoth Dict.toList Dict.toList
+                |> Expect.equal
+                    ( [ ( 1, 'B' )
+                      , ( 4, 'C' )
+                      , ( 5, 'D' )
+                      ]
+                    , [ ( 2, 'E' )
+                      , ( 3, 'A' )
+                      ]
+                    )
