@@ -203,7 +203,9 @@ toList avl =
 -- M A N I P U L A T I O N
 
 
-{-| -}
+{-| Insert a key-value pair into a dictionary.
+Replaces value when there is a collision.
+-}
 insert : key -> value -> Dict key value -> Dict key value
 insert key value (Internal.AVL comparator count root) =
     let
@@ -306,7 +308,9 @@ rotateRight pk pv lk lv ll lr pr =
                 leaf lk lv ll (leaf pk pv lr pr)
 
 
-{-| -}
+{-| Remove a key-value pair from a dictionary.
+If the key is not found, no changes are made.
+-}
 remove : key -> Dict key value -> Dict key value
 remove key ((Internal.AVL comparator count root) as avl) =
     case removeHelp comparator key root of
@@ -379,7 +383,8 @@ removeMax node =
                     Just ( rk, rv, balance k v l nextR )
 
 
-{-| -}
+{-| Update the value of a dictionary for a specific key with a given function.
+-}
 update : key -> (Maybe value -> Maybe value) -> Dict key value -> Dict key value
 update key transform avl =
     case get key avl of
@@ -400,7 +405,9 @@ update key transform avl =
                     insert key value avl
 
 
-{-| -}
+{-| Remove all entries from a dictionary.
+Useful when you need to create new empty dictionary using same comparator.
+-}
 clear : Dict key value -> Dict key value
 clear (Internal.AVL comparator _ _) =
     emptyWith comparator

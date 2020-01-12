@@ -393,6 +393,42 @@ removeSuite =
         ]
 
 
+updateSuite : Test
+updateSuite =
+    describe "AVL.Dict.update"
+        [ test "Nothing to Nothing" <|
+            \_ ->
+                Dict.fromList [ ( 0, "A" ), ( 1, "B" ) ]
+                    |> Dict.update 2 (always Nothing)
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, "A" ), ( 1, "B" ) ]
+
+        --
+        , test "Nothing to Just" <|
+            \_ ->
+                Dict.fromList [ ( 0, "A" ), ( 1, "B" ) ]
+                    |> Dict.update 2 (always (Just "C"))
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, "A" ), ( 1, "B" ), ( 2, "C" ) ]
+
+        --
+        , test "Just to Nothing" <|
+            \_ ->
+                Dict.fromList [ ( 0, "A" ), ( 1, "B" ) ]
+                    |> Dict.update 1 (always Nothing)
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, "A" ) ]
+
+        --
+        , test "Just to Just" <|
+            \_ ->
+                Dict.fromList [ ( 0, "A" ), ( 1, "B" ) ]
+                    |> Dict.update 1 (Maybe.map ((++) "C"))
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, "A" ), ( 1, "CB" ) ]
+        ]
+
+
 
 -- Q U E R Y
 
