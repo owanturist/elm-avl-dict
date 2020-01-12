@@ -95,31 +95,36 @@ untuple comparator ( count, root ) =
 -- C O N S T R U C T I O N
 
 
-{-| -}
+{-| Create an empty dictionary with custom key comparator.
+-}
 emptyWith : Comparator key -> Dict key value
 emptyWith comparator =
     Internal.AVL comparator 0 nil
 
 
-{-| -}
+{-| Create an empty dictionary.
+-}
 empty : Dict comparable value
 empty =
     emptyWith compare
 
 
-{-| -}
+{-| Create a dictionary with one key-value pair with custom key comparator.
+-}
 singletonWith : Comparator key -> key -> value -> Dict key value
 singletonWith comparator key value =
     Internal.AVL comparator 1 (RBNode_elm_builtin 1 key value nil nil)
 
 
-{-| -}
+{-| Create a dictionary with one key-value pair.
+-}
 singleton : comparable -> value -> Dict comparable value
 singleton =
     singletonWith compare
 
 
-{-| -}
+{-| Convert an association list into a dictionary with custom key comparator.
+-}
 fromListWith : Comparator key -> List ( key, value ) -> Dict key value
 fromListWith comparator list =
     untuple comparator (List.foldl (fromListHelper comparator) ( 0, nil ) list)
@@ -138,7 +143,8 @@ fromListHelper comparator ( key, value ) ( count, root ) =
         ( count, nextRoot )
 
 
-{-| -}
+{-| Convert an association list into a dictionary.
+-}
 fromList : List ( comparable, value ) -> Dict comparable value
 fromList =
     fromListWith compare
@@ -148,7 +154,11 @@ fromList =
 -- D E C O N S T R U C T I O N
 
 
-{-| -}
+{-| Get all of the keys in a dictionary, sorted from lowest to highest.
+
+    keys (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
+
+-}
 keys : Dict key value -> List key
 keys avl =
     let
@@ -159,7 +169,11 @@ keys avl =
     foldr step [] avl
 
 
-{-| -}
+{-| Get all of the values in a dictionary, in the order of their keys.
+
+    values (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
+
+-}
 values : Dict key value -> List value
 values avl =
     let
@@ -170,7 +184,11 @@ values avl =
     foldr step [] avl
 
 
-{-| -}
+{-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
+
+    toList (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
+
+-}
 toList : Dict key value -> List ( key, value )
 toList avl =
     let
