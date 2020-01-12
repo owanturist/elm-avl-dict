@@ -1,7 +1,7 @@
 {
     "type": "package",
-    "name": "owanturist/elm-avl-tree",
-    "summary": "AVL Tree Elm",
+    "name": "owanturist/elm-avl-dict",
+    "summary": "AVL based Elm Dict",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [

@@ -11,6 +11,13 @@ module AVL.Dict exposing
 
 {-| An AVL Tree based dictionary.
 
+A dictionary mapping unique keys to values.
+The keys can be any type.
+This includes both custom and comparable types such as Int, Float, Time, Char, String, and tuples or lists of comparable types.
+
+Insert, remove, get and member operations all take `O(log n)` time.
+Size takes constant `O(1)` time.
+
 
 # Dictionary
 
