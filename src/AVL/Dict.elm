@@ -581,14 +581,15 @@ foldrHelp fn acc node =
 
 {-| Combine two dictionaries.
 If there is a collision, preference is given to the left dictionary.
-It uses comparator of the right dictionary.
 -}
 union : Dict key value -> Dict key value -> Dict key value
 union left right =
     foldl insert right left
 
 
-{-| -}
+{-| Keep a key-value pair when its key appears in the second dictionary.
+Preference is given to values in the left dictionary.
+-}
 intersect : Dict key value -> Dict key value -> Dict key value
 intersect left right =
     let

@@ -736,3 +736,45 @@ unionSuite =
                         , ( 5, 'f' )
                         ]
         ]
+
+
+intersectSuite : Test
+intersectSuite =
+    describe "AVL.Dict.intersect"
+        [ test "left is empty" <|
+            \_ ->
+                Dict.intersect Dict.empty (Dict.singleton 0 'A')
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , test "right is empty" <|
+            \_ ->
+                Dict.intersect (Dict.singleton 0 'A') Dict.empty
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , test "intersects" <|
+            \_ ->
+                Dict.intersect
+                    (Dict.fromList
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        , ( 2, 'C' )
+                        , ( 3, 'D' )
+                        ]
+                    )
+                    (Dict.fromList
+                        [ ( 2, 'c' )
+                        , ( 3, 'd' )
+                        , ( 4, 'e' )
+                        , ( 5, 'f' )
+                        ]
+                    )
+                    |> Dict.toList
+                    |> Expect.equalLists
+                        [ ( 2, 'C' )
+                        , ( 3, 'D' )
+                        ]
+        ]
