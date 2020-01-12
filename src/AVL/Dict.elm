@@ -541,7 +541,8 @@ partition check (Internal.AVL comparator _ root) =
         (foldlHelp step ( ( 0, nil ), ( 0, nil ) ) root)
 
 
-{-| -}
+{-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
+-}
 foldl : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
 foldl fn acc (Internal.AVL _ _ root) =
     foldlHelp fn acc root
@@ -557,7 +558,8 @@ foldlHelp fn acc node =
             foldlHelp fn (fn k v (foldlHelp fn acc l)) r
 
 
-{-| -}
+{-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
+-}
 foldr : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
 foldr fn acc (Internal.AVL _ _ root) =
     foldrHelp fn acc root
@@ -577,7 +579,10 @@ foldrHelp fn acc node =
 -- C O M B I N E
 
 
-{-| -}
+{-| Combine two dictionaries.
+If there is a collision, preference is given to the left dictionary.
+It uses comparator of the right dictionary.
+-}
 union : Dict key value -> Dict key value -> Dict key value
 union left right =
     foldl insert right left

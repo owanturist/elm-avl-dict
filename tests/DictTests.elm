@@ -686,3 +686,53 @@ partitionSuite =
                       , ( 3, 'A' )
                       ]
                     )
+
+
+
+-- C O M B I N E
+
+
+unionSuite : Test
+unionSuite =
+    describe "AVL.Dict.union"
+        [ test "left is empty" <|
+            \_ ->
+                Dict.union Dict.empty (Dict.singleton 0 'A')
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, 'A' ) ]
+
+        --
+        , test "right is empty" <|
+            \_ ->
+                Dict.union (Dict.singleton 0 'A') Dict.empty
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, 'A' ) ]
+
+        --
+        , test "unions" <|
+            \_ ->
+                Dict.union
+                    (Dict.fromList
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        , ( 2, 'C' )
+                        , ( 3, 'D' )
+                        ]
+                    )
+                    (Dict.fromList
+                        [ ( 2, 'c' )
+                        , ( 3, 'd' )
+                        , ( 4, 'e' )
+                        , ( 5, 'f' )
+                        ]
+                    )
+                    |> Dict.toList
+                    |> Expect.equalLists
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        , ( 2, 'C' )
+                        , ( 3, 'D' )
+                        , ( 4, 'e' )
+                        , ( 5, 'f' )
+                        ]
+        ]
