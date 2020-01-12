@@ -477,7 +477,8 @@ getHelper comparator target node =
 -- T R A N S F O R M
 
 
-{-| -}
+{-| Apply a function to all values in a dictionary.
+-}
 map : (key -> a -> b) -> Dict key a -> Dict key b
 map fn (Internal.AVL comparator count root) =
     Internal.AVL comparator count (mapHelp fn root)

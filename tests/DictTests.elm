@@ -595,6 +595,28 @@ getSuite =
 -- T R A N S F O R M
 
 
+mapSuite : Test
+mapSuite =
+    test "AVL.Dict.map" <|
+        \_ ->
+            [ ( 3, "A" )
+            , ( 1, "B" )
+            , ( 4, "C" )
+            , ( 5, "D" )
+            , ( 2, "E" )
+            ]
+                |> Dict.fromList
+                |> Dict.map (\key value -> String.toList (String.repeat key value))
+                |> Dict.toList
+                |> Expect.equalLists
+                    [ ( 1, [ 'B' ] )
+                    , ( 2, [ 'E', 'E' ] )
+                    , ( 3, [ 'A', 'A', 'A' ] )
+                    , ( 4, [ 'C', 'C', 'C', 'C' ] )
+                    , ( 5, [ 'D', 'D', 'D', 'D', 'D' ] )
+                    ]
+
+
 foldlSuite : Test
 foldlSuite =
     fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.Dict.foldl" <|
