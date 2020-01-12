@@ -23,7 +23,7 @@ module AVL.Dict exposing
 @docs empty, emptyWith, singleton, singletonWith, fromList, fromListWith
 
 
-# Deconstruct
+# Deconstruction
 
 @docs keys, values, toList
 
@@ -145,7 +145,7 @@ fromList =
 
 
 
--- D E C O N S T R U C T
+-- D E C O N S T R U C T I O N
 
 
 {-| -}

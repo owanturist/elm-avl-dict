@@ -101,6 +101,54 @@ extract node =
 
 
 
+-- D E C O N S T R U C T I O N
+
+
+keysSuite : Test
+keysSuite =
+    describe "AVL.Dict.keys"
+        [ test "empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.keys
+                    |> Expect.equalLists []
+
+        --
+        , test "singleton" <|
+            \_ ->
+                Dict.singleton 0 'A'
+                    |> Dict.keys
+                    |> Expect.equalLists [ 0 ]
+
+        --
+        , test "inserts" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.insert 2 'A'
+                    |> Dict.insert 0 'B'
+                    |> Dict.insert 5 'C'
+                    |> Dict.insert 3 'E'
+                    |> Dict.insert 1 'F'
+                    |> Dict.insert 4 'G'
+                    |> Dict.insert 3 'H'
+                    |> Dict.keys
+                    |> Expect.equalLists [ 0, 1, 2, 3, 4, 5 ]
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.keys
+                    |> Expect.equalLists
+                        (list
+                            |> List.map Tuple.first
+                            |> List.sort
+                            |> List.Extra.unique
+                        )
+        ]
+
+
+
 -- M A N I P U L A T I O N
 
 
