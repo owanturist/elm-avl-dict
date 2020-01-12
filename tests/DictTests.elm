@@ -429,6 +429,34 @@ updateSuite =
         ]
 
 
+clearSuite : Test
+clearSuite =
+    describe "AVL.Dict.clear"
+        [ test "AVL.Dict.empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.clear
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , fuzz2 Fuzz.int Fuzz.char "AVL.Dict.singleton" <|
+            \key value ->
+                Dict.singleton key value
+                    |> Dict.clear
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.clear
+                    |> Dict.toList
+                    |> Expect.equalLists []
+        ]
+
+
 
 -- Q U E R Y
 
@@ -455,6 +483,14 @@ isEmptySuite =
                 Dict.fromList list
                     |> Dict.isEmpty
                     |> Expect.equal (List.isEmpty list)
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.clear" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.clear
+                    |> Dict.isEmpty
+                    |> Expect.equal True
         ]
 
 
@@ -484,6 +520,14 @@ sizeSuite =
                 Dict.fromList list
                     |> Dict.size
                     |> Expect.equal (List.length uniq)
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.clear" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.clear
+                    |> Dict.size
+                    |> Expect.equal 0
         ]
 
 

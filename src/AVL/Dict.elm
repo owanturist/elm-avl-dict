@@ -161,12 +161,12 @@ fromList =
 -}
 keys : Dict key value -> List key
 keys avl =
-    let
-        step : key -> value -> List key -> List key
-        step key _ acc =
-            key :: acc
-    in
-    foldr step [] avl
+    foldr keysStep [] avl
+
+
+keysStep : key -> value -> List key -> List key
+keysStep key _ acc =
+    key :: acc
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -176,12 +176,12 @@ keys avl =
 -}
 values : Dict key value -> List value
 values avl =
-    let
-        step : key -> value -> List value -> List value
-        step _ value acc =
-            value :: acc
-    in
-    foldr step [] avl
+    foldr valuesStep [] avl
+
+
+valuesStep : key -> value -> List value -> List value
+valuesStep _ value acc =
+    value :: acc
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
@@ -191,12 +191,12 @@ values avl =
 -}
 toList : Dict key value -> List ( key, value )
 toList avl =
-    let
-        step : key -> value -> List ( key, value ) -> List ( key, value )
-        step key value acc =
-            ( key, value ) :: acc
-    in
-    foldr step [] avl
+    foldr toListStep [] avl
+
+
+toListStep : key -> value -> List ( key, value ) -> List ( key, value )
+toListStep key value acc =
+    ( key, value ) :: acc
 
 
 
