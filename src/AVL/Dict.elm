@@ -52,12 +52,66 @@ module AVL.Dict exposing
 import Internal exposing (Node(..))
 
 
-{-| -}
+{-| A dictionary of keys and values.
+So a `Dict String User` is a dictionary
+that lets you look up a `String` (such as user names)
+and find the associated `User`.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    users : Dict String User
+    users =
+        Dict.fromList
+            [ ( "Alice", User "Alice" 28 1.65 )
+            , ( "Bob", User "Bob" 19 1.82 )
+            , ( "Chuck", User "Chuck" 33 1.75 )
+            ]
+
+    type alias User =
+        { name : String
+        , age : Int
+        , height : Float
+        }
+
+-}
 type alias Dict key value =
     Internal.AVL key value
 
 
-{-| -}
+{-| A comparator is a function which compares two keys.
+So a `Dict ID User` is a dictionary
+that lets you look up a `ID` (such as user ids)
+and find the associated `User`.
+
+    import AVL.Dict as Dict exposing (Comparator, Dict)
+
+    type ID
+        = ID Int
+
+    idComparator : Comparator ID
+    idComparator (ID x) (ID y) =
+        compare x y
+
+    users : Dict ID User
+    users =
+        Dict.fromListWith idComparator
+            [ ( "Alice", User (ID 0) "Alice" 28 1.65 )
+            , ( "Bob", User (ID 1) "Bob" 19 1.82 )
+            , ( "Chuck", User (ID 2) "Chuck" 33 1.75 )
+            ]
+
+    alice : Maybe User
+    alice =
+        Dict.get (ID 0) users
+
+    type alias User =
+        { id : ID
+        , name : String
+        , age : Int
+        , height : Float
+        }
+
+-}
 type alias Comparator key =
     key -> key -> Order
 
