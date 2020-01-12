@@ -417,25 +417,39 @@ clear (Internal.AVL comparator _ _) =
 -- Q U E R Y
 
 
-{-| -}
+{-| Determine if a dictionary is empty.
+-}
 isEmpty : Dict key value -> Bool
 isEmpty avl =
     size avl == 0
 
 
-{-| -}
+{-| Determine the number of key-value pairs in the dictionary.
+It takes constant time to request the size.
+-}
 size : Dict key value -> Int
 size (Internal.AVL _ count _) =
     count
 
 
-{-| -}
+{-| Determine if a key is in a dictionary.
+-}
 member : key -> Dict key value -> Bool
 member key avl =
     get key avl /= Nothing
 
 
-{-| -}
+{-| Get the value associated with a key. If the key is not found, return Nothing.
+This is useful when you are not sure if a key will be in the dictionary.
+
+    animals =
+        fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
+
+    get "Tom" animals == Just Cat
+    get "Jerry" animals == Just Mouse
+    get "Spike" animals == Nothing
+
+-}
 get : key -> Dict key value -> Maybe value
 get key (Internal.AVL comparator _ root) =
     getHelper comparator key root

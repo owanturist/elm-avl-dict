@@ -531,8 +531,8 @@ sizeSuite =
         ]
 
 
-member : Test
-member =
+memberSuite : Test
+memberSuite =
     describe "AVL.Dict.member"
         [ fuzz Fuzz.int "AVL.Dict.empty" <|
             \key ->
@@ -553,6 +553,41 @@ member =
                 Dict.fromList list
                     |> Dict.member key
                     |> Expect.equal (List.member key (List.map Tuple.first list))
+        ]
+
+
+getSuite : Test
+getSuite =
+    describe "AVL.Dict.get"
+        [ fuzz Fuzz.int "AVL.Dict.empty" <|
+            \key ->
+                Dict.empty
+                    |> Dict.get key
+                    |> Expect.equal Nothing
+
+        --
+        , fuzz2 Fuzz.int Fuzz.int "AVL.Dict.singleton" <|
+            \x y ->
+                Dict.singleton x ()
+                    |> Dict.get y
+                    |> Expect.equal
+                        (if x == y then
+                            Just ()
+
+                         else
+                            Nothing
+                        )
+
+        --
+        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+            \key list ->
+                Dict.fromList list
+                    |> Dict.get key
+                    |> Expect.equal
+                        (List.reverse list
+                            |> List.Extra.find ((==) key << Tuple.first)
+                            |> Maybe.map Tuple.second
+                        )
         ]
 
 
