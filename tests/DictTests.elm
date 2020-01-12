@@ -195,6 +195,59 @@ valuesSuite =
         ]
 
 
+toListSuite : Test
+toListSuite =
+    describe "AVL.Dict.toList"
+        [ test "empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , test "singleton" <|
+            \_ ->
+                Dict.singleton 0 'A'
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, 'A' ) ]
+
+        --
+        , test "inserts" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.insert 2 'A'
+                    |> Dict.insert 0 'B'
+                    |> Dict.insert 5 'C'
+                    |> Dict.insert 3 'E'
+                    |> Dict.insert 1 'F'
+                    |> Dict.insert 4 'G'
+                    |> Dict.insert 3 'B'
+                    |> Dict.toList
+                    |> Expect.equalLists
+                        [ ( 0, 'B' )
+                        , ( 1, 'F' )
+                        , ( 2, 'A' )
+                        , ( 3, 'B' )
+                        , ( 4, 'G' )
+                        , ( 5, 'C' )
+                        ]
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.toList
+                    |> Expect.equalLists
+                        (list
+                            -- the last added value goes to Dict
+                            |> List.reverse
+                            -- keeps the first value
+                            |> List.Extra.uniqueBy Tuple.first
+                            |> List.sortBy Tuple.first
+                        )
+        ]
+
+
 
 -- M A N I P U L A T I O N
 
