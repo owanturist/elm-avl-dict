@@ -531,6 +531,31 @@ sizeSuite =
         ]
 
 
+member : Test
+member =
+    describe "AVL.Dict.member"
+        [ fuzz Fuzz.int "AVL.Dict.empty" <|
+            \key ->
+                Dict.empty
+                    |> Dict.member key
+                    |> Expect.equal False
+
+        --
+        , fuzz2 Fuzz.int Fuzz.int "AVL.Dict.singleton" <|
+            \x y ->
+                Dict.singleton x ()
+                    |> Dict.member y
+                    |> Expect.equal (x == y)
+
+        --
+        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+            \key list ->
+                Dict.fromList list
+                    |> Dict.member key
+                    |> Expect.equal (List.member key (List.map Tuple.first list))
+        ]
+
+
 
 -- T R A N S F O R M
 
