@@ -1,6 +1,6 @@
-module AVLTests exposing (..)
+module DictTests exposing (..)
 
-import AVL
+import AVL.Dict as Dict
 import Expect
 import Fuzz
 import Internal exposing (AVL(..), Node(..))
@@ -106,63 +106,63 @@ extract node =
 
 insertSuite : Test
 insertSuite =
-    describe "AVL.insert"
-        [ fuzz2 Fuzz.int Fuzz.string "AVL.empty" <|
+    describe "AVL.Dict.insert"
+        [ fuzz2 Fuzz.int Fuzz.string "AVL.Dict.empty" <|
             \key value ->
-                AVL.empty
-                    |> AVL.insert key value
+                Dict.empty
+                    |> Dict.insert key value
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to left" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 5 'b'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 5 'b'
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to left left" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 5 'b'
-                    |> AVL.insert 2 'c'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 5 'b'
+                    |> Dict.insert 2 'c'
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to left right" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 5 'b'
-                    |> AVL.insert 8 'c'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 5 'b'
+                    |> Dict.insert 8 'c'
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to right" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 15 'b'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 15 'b'
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to right left" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 15 'b'
-                    |> AVL.insert 12 'c'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 15 'b'
+                    |> Dict.insert 12 'c'
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
         , test "to right right" <|
             \_ ->
-                AVL.singleton 10 'a'
-                    |> AVL.insert 15 'b'
-                    |> AVL.insert 20 'c'
+                Dict.singleton 10 'a'
+                    |> Dict.insert 15 'b'
+                    |> Dict.insert 20 'c'
                     |> validate String.fromInt
                     |> Expect.ok
 
@@ -172,8 +172,8 @@ insertSuite =
                 "MNOLKQPHIA"
                     |> String.toList
                     |> List.foldl
-                        (\char -> Result.andThen (validate String.fromChar << AVL.insert char (Char.toCode char)))
-                        (Ok AVL.empty)
+                        (\char -> Result.andThen (validate String.fromChar << Dict.insert char (Char.toCode char)))
+                        (Ok Dict.empty)
                     |> Expect.ok
 
         --
@@ -181,8 +181,8 @@ insertSuite =
             \lo hi ->
                 List.range lo hi
                     |> List.foldr
-                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
-                        (Ok AVL.empty)
+                        (\i -> Result.andThen (validate String.fromInt << Dict.insert i (String.fromInt i)))
+                        (Ok Dict.empty)
                     |> Expect.ok
 
         --
@@ -190,8 +190,8 @@ insertSuite =
             \lo hi ->
                 List.range lo hi
                     |> List.foldl
-                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
-                        (Ok AVL.empty)
+                        (\i -> Result.andThen (validate String.fromInt << Dict.insert i (String.fromInt i)))
+                        (Ok Dict.empty)
                     |> Expect.ok
 
         --
@@ -199,36 +199,36 @@ insertSuite =
             \list ->
                 list
                     |> List.foldl
-                        (\i -> Result.andThen (validate String.fromInt << AVL.insert i (String.fromInt i)))
-                        (Ok AVL.empty)
+                        (\i -> Result.andThen (validate String.fromInt << Dict.insert i (String.fromInt i)))
+                        (Ok Dict.empty)
                     |> Expect.ok
         ]
 
 
 removeSuite : Test
 removeSuite =
-    describe "AVL.remove"
-        [ fuzz Fuzz.int "AVL.empty" <|
+    describe "AVL.Dict.remove"
+        [ fuzz Fuzz.int "AVL.Dict.empty" <|
             \key ->
-                AVL.empty
-                    |> AVL.remove key
+                Dict.empty
+                    |> Dict.remove key
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
-        , fuzz2 Fuzz.int Fuzz.int "AVL.singleton" <|
+        , fuzz2 Fuzz.int Fuzz.int "AVL.Dict.singleton" <|
             \put delete ->
-                AVL.singleton put ()
-                    |> AVL.remove delete
+                Dict.singleton put ()
+                    |> Dict.remove delete
                     |> validate String.fromInt
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) (Fuzz.list Fuzz.int) "AVL.fromList" <|
+        , fuzz2 (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) (Fuzz.list Fuzz.int) "AVL.Dict.fromList" <|
             \puts deletes ->
                 List.foldl
-                    (\key -> Result.andThen (validate String.fromInt << AVL.remove key))
-                    (Ok (AVL.fromList puts))
+                    (\key -> Result.andThen (validate String.fromInt << Dict.remove key))
+                    (Ok (Dict.fromList puts))
                     deletes
                     |> Expect.ok
 
@@ -236,10 +236,10 @@ removeSuite =
         , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "clear" <|
             \list ->
                 List.foldl
-                    (\( key, _ ) -> Result.andThen (validate String.fromInt << AVL.remove key))
-                    (Ok (AVL.fromList list))
+                    (\( key, _ ) -> Result.andThen (validate String.fromInt << Dict.remove key))
+                    (Ok (Dict.fromList list))
                     list
-                    |> Result.map AVL.isEmpty
+                    |> Result.map Dict.isEmpty
                     |> Result.withDefault False
                     |> Expect.equal True
         ]
@@ -251,54 +251,54 @@ removeSuite =
 
 isEmptySuite : Test
 isEmptySuite =
-    describe "AVL.isEmpty"
-        [ test "AVL.empty" <|
+    describe "AVL.Dict.isEmpty"
+        [ test "AVL.Dict.empty" <|
             \_ ->
-                AVL.empty
-                    |> AVL.isEmpty
+                Dict.empty
+                    |> Dict.isEmpty
                     |> Expect.equal True
 
         --
-        , fuzz2 Fuzz.char Fuzz.string "AVL.singleton" <|
+        , fuzz2 Fuzz.char Fuzz.string "AVL.Dict.singleton" <|
             \key value ->
-                AVL.singleton key value
-                    |> AVL.isEmpty
+                Dict.singleton key value
+                    |> Dict.isEmpty
                     |> Expect.equal False
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.Dict.fromList" <|
             \list ->
-                AVL.fromList list
-                    |> AVL.isEmpty
+                Dict.fromList list
+                    |> Dict.isEmpty
                     |> Expect.equal (List.isEmpty list)
         ]
 
 
 sizeSuite : Test
 sizeSuite =
-    describe "AVL.size"
-        [ test "AVL.empty" <|
+    describe "AVL.Dict.size"
+        [ test "AVL.Dict.empty" <|
             \_ ->
-                AVL.empty
-                    |> AVL.size
+                Dict.empty
+                    |> Dict.size
                     |> Expect.equal 0
 
         --
-        , fuzz2 Fuzz.char Fuzz.string "AVL.singleton" <|
+        , fuzz2 Fuzz.char Fuzz.string "AVL.Dict.singleton" <|
             \key value ->
-                AVL.singleton key value
-                    |> AVL.size
+                Dict.singleton key value
+                    |> Dict.size
                     |> Expect.equal 1
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.Dict.fromList" <|
             \list ->
                 let
                     uniq =
                         List.Extra.uniqueBy Tuple.first list
                 in
-                AVL.fromList list
-                    |> AVL.size
+                Dict.fromList list
+                    |> Dict.size
                     |> Expect.equal (List.length uniq)
         ]
 
@@ -309,10 +309,10 @@ sizeSuite =
 
 foldlSuite : Test
 foldlSuite =
-    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.foldl" <|
+    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.Dict.foldl" <|
         \list ->
-            AVL.fromList list
-                |> AVL.foldl (\k v acc -> ( k, v ) :: acc) []
+            Dict.fromList list
+                |> Dict.foldl (\k v acc -> ( k, v ) :: acc) []
                 |> Expect.equalLists
                     (list
                         |> List.Extra.uniqueBy Tuple.first
@@ -323,10 +323,10 @@ foldlSuite =
 
 foldrSuite : Test
 foldrSuite =
-    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.foldr" <|
+    fuzz (Fuzz.list (Fuzz.map (\x -> ( x, String.fromInt x )) Fuzz.int)) "AVL.Dict.foldr" <|
         \list ->
-            AVL.fromList list
-                |> AVL.foldr (\k v acc -> ( k, v ) :: acc) []
+            Dict.fromList list
+                |> Dict.foldr (\k v acc -> ( k, v ) :: acc) []
                 |> Expect.equalLists
                     (list
                         |> List.Extra.uniqueBy Tuple.first

@@ -1,5 +1,5 @@
-module AVL exposing
-    ( AVL
+module AVL.Dict exposing
+    ( Dict
     , Comparator
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
@@ -14,7 +14,7 @@ module AVL exposing
 
 # Dictionary
 
-@docs AVL
+@docs Dict
 
 
 # Construction
@@ -53,7 +53,7 @@ import Internal exposing (Node(..))
 
 
 {-| -}
-type alias AVL key value =
+type alias Dict key value =
     Internal.AVL key value
 
 
@@ -86,7 +86,7 @@ leaf key value left right =
     RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-untuple : Comparator key -> ( Int, Node key value ) -> AVL key value
+untuple : Comparator key -> ( Int, Node key value ) -> Dict key value
 untuple comparator ( count, root ) =
     Internal.AVL comparator count root
 
@@ -96,31 +96,31 @@ untuple comparator ( count, root ) =
 
 
 {-| -}
-emptyWith : Comparator key -> AVL key value
+emptyWith : Comparator key -> Dict key value
 emptyWith comparator =
     Internal.AVL comparator 0 nil
 
 
 {-| -}
-empty : AVL comparable value
+empty : Dict comparable value
 empty =
     emptyWith compare
 
 
 {-| -}
-singletonWith : Comparator key -> key -> value -> AVL key value
+singletonWith : Comparator key -> key -> value -> Dict key value
 singletonWith comparator key value =
     Internal.AVL comparator 1 (RBNode_elm_builtin 1 key value nil nil)
 
 
 {-| -}
-singleton : comparable -> value -> AVL comparable value
+singleton : comparable -> value -> Dict comparable value
 singleton =
     singletonWith compare
 
 
 {-| -}
-fromListWith : Comparator key -> List ( key, value ) -> AVL key value
+fromListWith : Comparator key -> List ( key, value ) -> Dict key value
 fromListWith comparator list =
     untuple comparator (List.foldl (fromListHelper comparator) ( 0, nil ) list)
 
@@ -139,7 +139,7 @@ fromListHelper comparator ( key, value ) ( count, root ) =
 
 
 {-| -}
-fromList : List ( comparable, value ) -> AVL comparable value
+fromList : List ( comparable, value ) -> Dict comparable value
 fromList =
     fromListWith compare
 
@@ -149,7 +149,7 @@ fromList =
 
 
 {-| -}
-keys : AVL key value -> List key
+keys : Dict key value -> List key
 keys avl =
     let
         step : key -> value -> List key -> List key
@@ -160,7 +160,7 @@ keys avl =
 
 
 {-| -}
-values : AVL key value -> List value
+values : Dict key value -> List value
 values avl =
     let
         step : key -> value -> List value -> List value
@@ -171,7 +171,7 @@ values avl =
 
 
 {-| -}
-toList : AVL key value -> List ( key, value )
+toList : Dict key value -> List ( key, value )
 toList avl =
     let
         step : key -> value -> List ( key, value ) -> List ( key, value )
@@ -186,7 +186,7 @@ toList avl =
 
 
 {-| -}
-insert : key -> value -> AVL key value -> AVL key value
+insert : key -> value -> Dict key value -> Dict key value
 insert key value (Internal.AVL comparator count root) =
     let
         ( added, nextRoot ) =
@@ -289,7 +289,7 @@ rotateRight pk pv lk lv ll lr pr =
 
 
 {-| -}
-remove : key -> AVL key value -> AVL key value
+remove : key -> Dict key value -> Dict key value
 remove key ((Internal.AVL comparator count root) as avl) =
     case removeHelp comparator key root of
         Nothing ->
@@ -362,7 +362,7 @@ removeMax node =
 
 
 {-| -}
-update : key -> (Maybe value -> Maybe value) -> AVL key value -> AVL key value
+update : key -> (Maybe value -> Maybe value) -> Dict key value -> Dict key value
 update key transform avl =
     case get key avl of
         Nothing ->
@@ -383,7 +383,7 @@ update key transform avl =
 
 
 {-| -}
-clear : AVL key value -> AVL key value
+clear : Dict key value -> Dict key value
 clear (Internal.AVL comparator _ _) =
     emptyWith comparator
 
@@ -393,25 +393,25 @@ clear (Internal.AVL comparator _ _) =
 
 
 {-| -}
-isEmpty : AVL key value -> Bool
+isEmpty : Dict key value -> Bool
 isEmpty avl =
     size avl == 0
 
 
 {-| -}
-size : AVL key value -> Int
+size : Dict key value -> Int
 size (Internal.AVL _ count _) =
     count
 
 
 {-| -}
-member : key -> AVL key value -> Bool
+member : key -> Dict key value -> Bool
 member key avl =
     get key avl /= Nothing
 
 
 {-| -}
-get : key -> AVL key value -> Maybe value
+get : key -> Dict key value -> Maybe value
 get key (Internal.AVL comparator _ root) =
     getHelper comparator key root
 
@@ -439,7 +439,7 @@ getHelper comparator target node =
 
 
 {-| -}
-map : (key -> a -> b) -> AVL key a -> AVL key b
+map : (key -> a -> b) -> Dict key a -> Dict key b
 map fn (Internal.AVL comparator count root) =
     Internal.AVL comparator count (mapHelp fn root)
 
@@ -455,7 +455,7 @@ mapHelp fn node =
 
 
 {-| -}
-filter : (key -> value -> Bool) -> AVL key value -> AVL key value
+filter : (key -> value -> Bool) -> Dict key value -> Dict key value
 filter check (Internal.AVL comparator _ root) =
     let
         step : key -> value -> ( Int, Node key value ) -> ( Int, Node key value )
@@ -472,7 +472,7 @@ filter check (Internal.AVL comparator _ root) =
 
 
 {-| -}
-partition : (key -> value -> Bool) -> AVL key value -> ( AVL key value, AVL key value )
+partition : (key -> value -> Bool) -> Dict key value -> ( Dict key value, Dict key value )
 partition check (Internal.AVL comparator _ root) =
     let
         step : key -> value -> ( ( Int, Node key value ), ( Int, Node key value ) ) -> ( ( Int, Node key value ), ( Int, Node key value ) )
@@ -498,7 +498,7 @@ partition check (Internal.AVL comparator _ root) =
 
 
 {-| -}
-foldl : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
+foldl : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
 foldl fn acc (Internal.AVL _ _ root) =
     foldlHelp fn acc root
 
@@ -514,7 +514,7 @@ foldlHelp fn acc node =
 
 
 {-| -}
-foldr : (key -> value -> acc -> acc) -> acc -> AVL key value -> acc
+foldr : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
 foldr fn acc (Internal.AVL _ _ root) =
     foldrHelp fn acc root
 
@@ -534,13 +534,13 @@ foldrHelp fn acc node =
 
 
 {-| -}
-union : AVL key value -> AVL key value -> AVL key value
+union : Dict key value -> Dict key value -> Dict key value
 union left right =
     foldl insert right left
 
 
 {-| -}
-intersect : AVL key value -> AVL key value -> AVL key value
+intersect : Dict key value -> Dict key value -> Dict key value
 intersect left right =
     let
         step : key -> value -> Bool
@@ -551,10 +551,10 @@ intersect left right =
 
 
 {-| -}
-diff : AVL key value -> AVL key value -> AVL key value
+diff : Dict key value -> Dict key value -> Dict key value
 diff left right =
     let
-        step : key -> value -> AVL key value -> AVL key value
+        step : key -> value -> Dict key value -> Dict key value
         step key _ acc =
             remove key acc
     in
@@ -566,8 +566,8 @@ merge :
     (key -> left -> acc -> acc)
     -> (key -> left -> right -> acc -> acc)
     -> (key -> right -> acc -> acc)
-    -> AVL key left
-    -> AVL key right
+    -> Dict key left
+    -> Dict key right
     -> acc
     -> acc
 merge onLeft onBoth onRight left (Internal.AVL comparator _ right) acc =
