@@ -148,6 +148,53 @@ keysSuite =
         ]
 
 
+valuesSuite : Test
+valuesSuite =
+    describe "AVL.Dict.values"
+        [ test "empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.values
+                    |> Expect.equalLists []
+
+        --
+        , test "singleton" <|
+            \_ ->
+                Dict.singleton 0 'A'
+                    |> Dict.values
+                    |> Expect.equalLists [ 'A' ]
+
+        --
+        , test "inserts" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.insert 2 'A'
+                    |> Dict.insert 0 'B'
+                    |> Dict.insert 5 'C'
+                    |> Dict.insert 3 'E'
+                    |> Dict.insert 1 'F'
+                    |> Dict.insert 4 'G'
+                    |> Dict.insert 3 'B'
+                    |> Dict.values
+                    |> Expect.equalLists [ 'B', 'F', 'A', 'B', 'G', 'C' ]
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.values
+                    |> Expect.equalLists
+                        (list
+                            -- the last added value goes to Dict
+                            |> List.reverse
+                            -- keeps the first value
+                            |> List.Extra.uniqueBy Tuple.first
+                            |> List.sortBy Tuple.first
+                            |> List.map Tuple.second
+                        )
+        ]
+
+
 
 -- M A N I P U L A T I O N
 
