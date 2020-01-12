@@ -778,3 +778,45 @@ intersectSuite =
                         , ( 3, 'D' )
                         ]
         ]
+
+
+diffSuite : Test
+diffSuite =
+    describe "AVL.Dict.diff"
+        [ test "left is empty" <|
+            \_ ->
+                Dict.diff Dict.empty (Dict.singleton 0 'A')
+                    |> Dict.toList
+                    |> Expect.equalLists []
+
+        --
+        , test "right is empty" <|
+            \_ ->
+                Dict.diff (Dict.singleton 0 'A') Dict.empty
+                    |> Dict.toList
+                    |> Expect.equalLists [ ( 0, 'A' ) ]
+
+        --
+        , test "diffs" <|
+            \_ ->
+                Dict.diff
+                    (Dict.fromList
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        , ( 2, 'C' )
+                        , ( 3, 'D' )
+                        ]
+                    )
+                    (Dict.fromList
+                        [ ( 2, 'c' )
+                        , ( 3, 'd' )
+                        , ( 4, 'e' )
+                        , ( 5, 'f' )
+                        ]
+                    )
+                    |> Dict.toList
+                    |> Expect.equalLists
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        ]
+        ]

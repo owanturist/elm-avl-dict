@@ -587,7 +587,7 @@ union left right =
     foldl insert right left
 
 
-{-| Keep a key-value pair when its key appears in the second dictionary.
+{-| Keep a key-value pair when its key appears in the right dictionary.
 Preference is given to values in the left dictionary.
 -}
 intersect : Dict key value -> Dict key value -> Dict key value
@@ -600,15 +600,16 @@ intersect left right =
     filter step left
 
 
-{-| -}
+{-| Keep a key-value pair when its key does not appear in the right dictionary.
+-}
 diff : Dict key value -> Dict key value -> Dict key value
 diff left right =
-    let
-        step : key -> value -> Dict key value -> Dict key value
-        step key _ acc =
-            remove key acc
-    in
-    foldl step left right
+    foldl diffStep left right
+
+
+diffStep : key -> value -> Dict key value -> Dict key value
+diffStep key _ acc =
+    remove key acc
 
 
 {-| -}
