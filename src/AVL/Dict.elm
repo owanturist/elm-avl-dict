@@ -612,7 +612,16 @@ diffStep key _ acc =
     remove key acc
 
 
-{-| -}
+{-| The most general way of combining two dictionaries.
+You provide three accumulators for when a given key appears:
+
+1.  Only in the left dictionary.
+2.  In both dictionaries.
+3.  Only in the right dictionary.
+
+You then traverse all the keys from lowest to highest, building up whatever you want.
+
+-}
 merge :
     (key -> left -> acc -> acc)
     -> (key -> left -> right -> acc -> acc)

@@ -820,3 +820,64 @@ diffSuite =
                         , ( 1, 'B' )
                         ]
         ]
+
+
+mergeSuite : Test
+mergeSuite =
+    let
+        mergeTest =
+            Dict.merge
+                (\key left acc -> String.fromList (List.repeat key left) :: acc)
+                (\key left right acc -> (String.fromList (List.repeat key left) ++ right) :: acc)
+                (\key right acc -> (String.fromInt key ++ right) :: acc)
+    in
+    describe "AVL.Dict.merge"
+        [ test "left is empty" <|
+            \_ ->
+                mergeTest
+                    Dict.empty
+                    (Dict.singleton 0 "A")
+                    []
+                    |> Expect.equalLists
+                        [ "0A"
+                        ]
+
+        --
+        , test "right is empty" <|
+            \_ ->
+                mergeTest
+                    (Dict.singleton 3 'A')
+                    Dict.empty
+                    []
+                    |> Expect.equalLists
+                        [ "AAA"
+                        ]
+
+        --
+        , test "merges" <|
+            \_ ->
+                mergeTest
+                    (Dict.fromList
+                        [ ( 0, 'A' )
+                        , ( 1, 'B' )
+                        , ( 2, 'C' )
+                        , ( 3, 'D' )
+                        ]
+                    )
+                    (Dict.fromList
+                        [ ( 2, "c" )
+                        , ( 3, "d" )
+                        , ( 4, "e" )
+                        , ( 5, "f" )
+                        ]
+                    )
+                    []
+                    |> Expect.equalLists
+                        [ "5f"
+                        , "4e"
+                        , "DDDd"
+                        , "CCc"
+                        , "B"
+                        , ""
+                        ]
+        ]
