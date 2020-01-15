@@ -102,9 +102,9 @@ and find the associated `User`.
     users : Dict ID User
     users =
         Dict.fromListWith idComparator
-            [ ( "Alice", User (ID 0) "Alice" 28 1.65 )
-            , ( "Bob", User (ID 1) "Bob" 19 1.82 )
-            , ( "Chuck", User (ID 2) "Chuck" 33 1.75 )
+            [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
+            , ( ID 1, User (ID 1) "Bob" 19 1.82 )
+            , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
             ]
 
     alice : Maybe User
