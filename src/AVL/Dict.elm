@@ -108,13 +108,13 @@ and find the associated `User`.
     type ID
         = ID Int
 
-    idComparator : Comparator ID
-    idComparator (ID x) (ID y) =
+    compareID : Comparator ID
+    compareID (ID x) (ID y) =
         compare x y
 
     users : Dict ID User
     users =
-        Dict.fromListWith idComparator
+        Dict.fromListWith compareID
             [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
             , ( ID 1, User (ID 1) "Bob" 19 1.82 )
             , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
@@ -136,35 +136,35 @@ type alias Comparator key =
     key -> key -> Order
 
 
-{-| Create an empty dictionary with custom key comparator.
+{-| Create an empty dictionary with custom keys.
 -}
 emptyWith : Comparator key -> Dict key value
 emptyWith comparator =
     Internal.AVLDict comparator 0 Internal.nil
 
 
-{-| Create an empty dictionary.
+{-| Create an empty dictionary with comparable keys.
 -}
 empty : Dict comparable value
 empty =
     emptyWith compare
 
 
-{-| Create a dictionary with one key-value pair with custom key comparator.
+{-| Create a dictionary with one custom key-value pair.
 -}
 singletonWith : Comparator key -> key -> value -> Dict key value
 singletonWith comparator key value =
     Internal.AVLDict comparator 1 (Internal.singleton key value)
 
 
-{-| Create a dictionary with one key-value pair.
+{-| Create a dictionary with one comparable key-value pair.
 -}
 singleton : comparable -> value -> Dict comparable value
 singleton =
     singletonWith compare
 
 
-{-| Convert an association list into a dictionary with custom key comparator.
+{-| Convert an association list into a dictionary with custom keys.
 -}
 fromListWith : Comparator key -> List ( key, value ) -> Dict key value
 fromListWith comparator list =
@@ -175,7 +175,7 @@ fromListWith comparator list =
         |> untuple comparator
 
 
-{-| Convert an association list into a dictionary.
+{-| Convert an association list into a dictionary with comparable keys.
 -}
 fromList : List ( comparable, value ) -> Dict comparable value
 fromList =
@@ -193,12 +193,7 @@ fromList =
 -}
 keys : Dict key value -> List key
 keys dict =
-    foldr keysStep [] dict
-
-
-keysStep : key -> value -> List key -> List key
-keysStep key _ acc =
-    key :: acc
+    foldr (\key _ acc -> key :: acc) [] dict
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -208,12 +203,7 @@ keysStep key _ acc =
 -}
 values : Dict key value -> List value
 values dict =
-    foldr valuesStep [] dict
-
-
-valuesStep : key -> value -> List value -> List value
-valuesStep _ value acc =
-    value :: acc
+    foldr (\_ value acc -> value :: acc) [] dict
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
@@ -223,12 +213,7 @@ valuesStep _ value acc =
 -}
 toList : Dict key value -> List ( key, value )
 toList dict =
-    foldr toListStep [] dict
-
-
-toListStep : key -> value -> List ( key, value ) -> List ( key, value )
-toListStep key value acc =
-    ( key, value ) :: acc
+    foldr (\key value acc -> ( key, value ) :: acc) [] dict
 
 
 
@@ -309,7 +294,7 @@ isEmpty dict =
 
 
 {-| Determine the number of key-value pairs in the dictionary.
-It takes constant time to request the size.
+It takes constant time to determine the size.
 -}
 size : Dict key value -> Int
 size (Internal.AVLDict _ count _) =

@@ -17,25 +17,36 @@ elm install owanturist/elm-avl-dict
 
 ```elm
 import AVL.Dict as Dict exposing (Comparator, Dict)
+import AVL.Set as Set exposing (Set)
+
 
 type ID
     = ID Int
 
-idComparator : Comparator ID
-idComparator (ID x) (ID y) =
+
+compareID : Comparator ID
+compareID (ID x) (ID y) =
     compare x y
+
 
 users : Dict ID User
 users =
-    Dict.fromListWith idComparator
+    Dict.fromListWith compareID
         [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
         , ( ID 1, User (ID 1) "Bob" 19 1.82 )
         , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
         ]
 
+
+userIDs : Set ID
+userIDs =
+    Set.fromListWith compareID [ ID 0, ID 1, ID 2 ]
+
+
 alice : Maybe User
 alice =
     Dict.get (ID 0) users
+
 
 type alias User =
     { id : ID
@@ -43,6 +54,7 @@ type alias User =
     , age : Int
     , height : Float
     }
+
 ```
 
 ## Performance 
