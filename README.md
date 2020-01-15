@@ -1,4 +1,4 @@
-# [AVL](https://en.wikipedia.org/wiki/AVL_tree) based Elm Dict
+# [AVL](https://en.wikipedia.org/wiki/AVL_tree) based Elm Dict and Set
 
 [![Build Status](https://travis-ci.com/owanturist/elm-avl-dict.svg?branch=master)](https://travis-ci.com/owanturist/elm-avl-dict)
 
@@ -16,26 +16,37 @@ elm install owanturist/elm-avl-dict
 ## Example
 
 ```elm
-import AVL.Dict as Dict exposing (Comparator, Dict)
+import AVL.Dict as Dict exposing (Dict)
+import AVL.Set as Set exposing (Set)
+
 
 type ID
     = ID Int
 
-idComparator : Comparator ID
-idComparator (ID x) (ID y) =
+
+compareID : ID -> ID -> Order
+compareID (ID x) (ID y) =
     compare x y
+
 
 users : Dict ID User
 users =
-    Dict.fromListWith idComparator
+    Dict.fromListWith compareID
         [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
         , ( ID 1, User (ID 1) "Bob" 19 1.82 )
         , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
         ]
 
+
+userIDs : Set ID
+userIDs =
+    Set.fromListWith compareID [ ID 0, ID 1, ID 2 ]
+
+
 alice : Maybe User
 alice =
     Dict.get (ID 0) users
+
 
 type alias User =
     { id : ID
@@ -43,6 +54,7 @@ type alias User =
     , age : Int
     , height : Float
     }
+
 ```
 
 ## Performance 

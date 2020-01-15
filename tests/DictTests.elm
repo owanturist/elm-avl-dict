@@ -3,13 +3,13 @@ module DictTests exposing (..)
 import AVL.Dict as Dict
 import Expect
 import Fuzz
-import Internal exposing (AVL(..), Node(..))
+import Internal exposing (AVLDict(..), Node(..))
 import List.Extra
 import Test exposing (Test, describe, fuzz, fuzz2, test)
 
 
-draw : (key -> String) -> (value -> String) -> AVL key value -> String
-draw keyToString valueToString (AVL _ _ root) =
+draw : (key -> String) -> (value -> String) -> AVLDict key value -> String
+draw keyToString valueToString (AVLDict _ _ root) =
     String.join "\n" (drawHelp keyToString valueToString root)
 
 
@@ -49,12 +49,12 @@ drawHelp keyToString valueToString node =
                 ++ shiftLeft (drawHelp keyToString valueToString left)
 
 
-validate : (comparable -> String) -> AVL comparable value -> Result String (AVL comparable value)
-validate keyToString (AVL comparator size root) =
+validate : (comparable -> String) -> AVLDict comparable value -> Result String (AVLDict comparable value)
+validate keyToString (AVLDict comparator size root) =
     Result.andThen
         (\( _, s ) ->
             if s == size then
-                Ok (AVL comparator size root)
+                Ok (AVLDict comparator size root)
 
             else
                 Err ("tracking size [" ++ String.fromInt size ++ "] does not match with real one [" ++ String.fromInt s ++ "]")

@@ -1,11 +1,12 @@
 {
     "type": "package",
     "name": "owanturist/elm-avl-dict",
-    "summary": "AVL based Elm Dict",
+    "summary": "Elm Dict and Set with custom keys based on AVL trees",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
-        "AVL.Dict"
+        "AVL.Dict",
+        "AVL.Set"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
