@@ -59,6 +59,15 @@ Size takes constant `O(1)` time.
 import Internal
 
 
+
+-- U T I L S
+
+
+untuple : Comparator key -> ( Int, Internal.Node key value ) -> Dict key value
+untuple comparator ( count, root ) =
+    Internal.AVLDict comparator count root
+
+
 {-| A dictionary of keys and values.
 So a `Dict String User` is a dictionary
 that lets you look up a `String` (such as user names)
@@ -83,6 +92,10 @@ and find the associated `User`.
 -}
 type alias Dict key value =
     Internal.AVLDict key value
+
+
+
+-- C O N S T R U C T I O N
 
 
 {-| A comparator is a function which compares two keys.
@@ -123,19 +136,6 @@ type alias Comparator key =
     key -> key -> Order
 
 
-
--- U T I L S
-
-
-untuple : Comparator key -> ( Int, Internal.Node key value ) -> Dict key value
-untuple comparator ( count, root ) =
-    Internal.AVLDict comparator count root
-
-
-
--- C O N S T R U C T I O N
-
-
 {-| Create an empty dictionary with custom key comparator.
 -}
 emptyWith : Comparator key -> Dict key value
@@ -168,7 +168,11 @@ singleton =
 -}
 fromListWith : Comparator key -> List ( key, value ) -> Dict key value
 fromListWith comparator list =
-    untuple comparator (List.foldl (Internal.fromList comparator) ( 0, Internal.nil ) list)
+    List.foldl
+        (Internal.fromList comparator Tuple.first Tuple.second)
+        ( 0, Internal.nil )
+        list
+        |> untuple comparator
 
 
 {-| Convert an association list into a dictionary.
@@ -188,8 +192,8 @@ fromList =
 
 -}
 keys : Dict key value -> List key
-keys avl =
-    foldr keysStep [] avl
+keys dict =
+    foldr keysStep [] dict
 
 
 keysStep : key -> value -> List key -> List key
@@ -203,8 +207,8 @@ keysStep key _ acc =
 
 -}
 values : Dict key value -> List value
-values avl =
-    foldr valuesStep [] avl
+values dict =
+    foldr valuesStep [] dict
 
 
 valuesStep : key -> value -> List value -> List value
@@ -218,8 +222,8 @@ valuesStep _ value acc =
 
 -}
 toList : Dict key value -> List ( key, value )
-toList avl =
-    foldr toListStep [] avl
+toList dict =
+    foldr toListStep [] dict
 
 
 toListStep : key -> value -> List ( key, value ) -> List ( key, value )
@@ -239,22 +243,25 @@ insert key value (Internal.AVLDict comparator count root) =
     let
         ( added, nextRoot ) =
             Internal.insert comparator key value root
-    in
-    if added then
-        Internal.AVLDict comparator (count + 1) nextRoot
 
-    else
-        Internal.AVLDict comparator count nextRoot
+        nextCount =
+            if added then
+                count + 1
+
+            else
+                count
+    in
+    Internal.AVLDict comparator nextCount nextRoot
 
 
 {-| Remove a key-value pair from a dictionary.
 If the key is not found, no changes are made.
 -}
 remove : key -> Dict key value -> Dict key value
-remove key ((Internal.AVLDict comparator count root) as avl) =
+remove key ((Internal.AVLDict comparator count root) as dict) =
     case Internal.remove comparator key root of
         Nothing ->
-            avl
+            dict
 
         Just nextRoot ->
             Internal.AVLDict comparator (count - 1) nextRoot
@@ -263,23 +270,23 @@ remove key ((Internal.AVLDict comparator count root) as avl) =
 {-| Update the value of a dictionary for a specific key with a given function.
 -}
 update : key -> (Maybe value -> Maybe value) -> Dict key value -> Dict key value
-update key transform avl =
-    case get key avl of
+update key transform dict =
+    case get key dict of
         Nothing ->
             case transform Nothing of
                 Nothing ->
-                    avl
+                    dict
 
                 Just value ->
-                    insert key value avl
+                    insert key value dict
 
         just ->
             case transform just of
                 Nothing ->
-                    remove key avl
+                    remove key dict
 
                 Just value ->
-                    insert key value avl
+                    insert key value dict
 
 
 {-| Remove all entries from a dictionary.
@@ -297,8 +304,8 @@ clear (Internal.AVLDict comparator _ _) =
 {-| Determine if a dictionary is empty.
 -}
 isEmpty : Dict key value -> Bool
-isEmpty avl =
-    size avl == 0
+isEmpty dict =
+    size dict == 0
 
 
 {-| Determine the number of key-value pairs in the dictionary.
@@ -312,8 +319,8 @@ size (Internal.AVLDict _ count _) =
 {-| Determine if a key is in a dictionary.
 -}
 member : key -> Dict key value -> Bool
-member key avl =
-    get key avl /= Nothing
+member key dict =
+    get key dict /= Nothing
 
 
 {-| Get the value associated with a key. If the key is not found, return Nothing.
@@ -347,7 +354,11 @@ map fn (Internal.AVLDict comparator count root) =
 -}
 filter : (key -> value -> Bool) -> Dict key value -> Dict key value
 filter check (Internal.AVLDict comparator _ root) =
-    untuple comparator (Internal.foldl (Internal.filter comparator check) ( 0, Internal.nil ) root)
+    Internal.foldl
+        (Internal.filter comparator check)
+        ( 0, Internal.nil )
+        root
+        |> untuple comparator
 
 
 {-| Partition a dictionary according to some test.
@@ -356,10 +367,11 @@ and the second contains the pairs that did not.
 -}
 partition : (key -> value -> Bool) -> Dict key value -> ( Dict key value, Dict key value )
 partition check (Internal.AVLDict comparator _ root) =
-    Tuple.mapBoth
-        (untuple comparator)
-        (untuple comparator)
-        (Internal.foldl (Internal.partition comparator check) ( ( 0, Internal.nil ), ( 0, Internal.nil ) ) root)
+    Internal.foldl
+        (Internal.partition comparator check)
+        ( ( 0, Internal.nil ), ( 0, Internal.nil ) )
+        root
+        |> Tuple.mapBoth (untuple comparator) (untuple comparator)
 
 
 {-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
@@ -393,24 +405,14 @@ Preference is given to values in the left dictionary.
 -}
 intersect : Dict key value -> Dict key value -> Dict key value
 intersect left right =
-    let
-        step : key -> value -> Bool
-        step key _ =
-            member key right
-    in
-    filter step left
+    filter (\key _ -> member key right) left
 
 
 {-| Keep a key-value pair when its key does not appear in the right dictionary.
 -}
 diff : Dict key value -> Dict key value -> Dict key value
 diff left right =
-    foldl diffStep left right
-
-
-diffStep : key -> value -> Dict key value -> Dict key value
-diffStep key _ acc =
-    remove key acc
+    foldl (\key _ acc -> remove key acc) left right
 
 
 {-| The most general way of combining two dictionaries.
@@ -431,5 +433,32 @@ merge :
     -> Dict key right
     -> acc
     -> acc
-merge onLeft onBoth onRight (Internal.AVLDict comparator _ left) (Internal.AVLDict _ _ right) acc =
-    Internal.merge comparator onLeft onBoth onRight left right acc
+merge onLeft onBoth onRight left (Internal.AVLDict comparator _ right) acc =
+    let
+        stepAll : key -> right -> ( List ( key, left ), acc ) -> ( List ( key, left ), acc )
+        stepAll rk rv ( list, semiacc ) =
+            case list of
+                [] ->
+                    ( []
+                    , onRight rk rv semiacc
+                    )
+
+                ( lk, lv ) :: rest ->
+                    case comparator lk rk of
+                        LT ->
+                            stepAll rk rv ( rest, onLeft lk lv semiacc )
+
+                        GT ->
+                            ( list
+                            , onRight rk rv semiacc
+                            )
+
+                        EQ ->
+                            ( rest
+                            , onBoth lk lv rv semiacc
+                            )
+
+        ( leftovers, accAll ) =
+            Internal.foldl stepAll ( toList left, acc ) right
+    in
+    List.foldl (\( lk, lv ) semiacc -> onLeft lk lv semiacc) accAll leftovers

@@ -6,7 +6,7 @@ module AVL.Set exposing
     , insert, remove, toggle, clear
     , isEmpty, size, member
     , map, filter, partition, foldl, foldr
-    , union, diff, intersect, merge
+    , union, diff, intersect
     )
 
 {-| An AVL Tree based set.
@@ -51,16 +51,25 @@ Size takes constant `O(1)` time.
 
 # Combine
 
-@docs union, diff, intersect, merge
+@docs union, diff, intersect
 
 -}
 
 import Internal
 
 
+
+-- U T I L S
+
+
+untuple : Comparator key -> ( Int, Internal.Node key () ) -> Set key
+untuple comparator ( count, root ) =
+    Internal.AVLSet comparator count (Internal.Set_elm_builtin root)
+
+
 {-| -}
 type alias Set key =
-    Internal.Set key
+    Internal.AVLSet key
 
 
 
@@ -80,8 +89,10 @@ empty =
 
 {-| -}
 emptyWith : Comparator key -> Set key
-emptyWith =
-    Debug.todo "emptyWith"
+emptyWith comparator =
+    Internal.nil
+        |> Internal.Set_elm_builtin
+        |> Internal.AVLSet comparator 0
 
 
 {-| -}
@@ -92,8 +103,10 @@ singleton =
 
 {-| -}
 singletonWith : Comparator key -> key -> Set key
-singletonWith =
-    Debug.todo "singletonWith"
+singletonWith comparator key =
+    Internal.singleton key ()
+        |> Internal.Set_elm_builtin
+        |> Internal.AVLSet comparator 1
 
 
 {-| -}
@@ -104,33 +117,57 @@ fromList =
 
 {-| -}
 fromListWith : Comparator key -> List key -> Set key
-fromListWith =
-    Debug.todo "fromListWith"
+fromListWith comparator list =
+    List.foldl
+        (Internal.fromList comparator identity (always ()))
+        ( 0, Internal.nil )
+        list
+        |> untuple comparator
 
 
 
 -- D E C O N S T R U C T I O N
 
 
+{-| -}
 toList : Set key -> List key
-toList =
-    Debug.todo "toList"
+toList set =
+    foldr (::) [] set
 
 
 
 -- M A N I P U L A T I O N
 
 
+{-| -}
 insert : key -> Set key -> Set key
-insert =
-    Debug.todo "insert"
+insert key (Internal.AVLSet comparator count (Internal.Set_elm_builtin root)) =
+    let
+        ( added, nextRoot ) =
+            Internal.insert comparator key () root
+
+        nextCount =
+            if added then
+                count + 1
+
+            else
+                count
+    in
+    Internal.AVLSet comparator nextCount (Internal.Set_elm_builtin nextRoot)
 
 
+{-| -}
 remove : key -> Set key -> Set key
-remove =
-    Debug.todo "remove"
+remove key ((Internal.AVLSet comparator count (Internal.Set_elm_builtin root)) as set) =
+    case Internal.remove comparator key root of
+        Nothing ->
+            set
+
+        Just nextRoot ->
+            Internal.AVLSet comparator (count - 1) (Internal.Set_elm_builtin nextRoot)
 
 
+{-| -}
 toggle : key -> Set key -> Set key
 toggle key set =
     if member key set then
@@ -140,85 +177,93 @@ toggle key set =
         insert key set
 
 
+{-| -}
 clear : Set key -> Set key
-clear =
-    Debug.todo "clear"
+clear (Internal.AVLSet comparator _ _) =
+    emptyWith comparator
 
 
 
 -- Q U E R Y
 
 
+{-| -}
 isEmpty : Set key -> Bool
 isEmpty set =
     size set /= 0
 
 
+{-| -}
 size : Set key -> Int
-size =
-    Debug.todo "size"
+size (Internal.AVLSet _ count _) =
+    count
 
 
+{-| -}
 member : key -> Set key -> Bool
-member =
-    Debug.todo "member"
+member key (Internal.AVLSet comparator _ (Internal.Set_elm_builtin root)) =
+    Internal.get comparator key root /= Nothing
 
 
 
 -- T R A N S F O R M
 
 
+{-| -}
 map : (key -> key) -> Set key -> Set key
-map =
-    Debug.todo "map"
+map fn set =
+    foldl (insert << fn) (clear set) set
 
 
+{-| -}
 filter : (key -> Bool) -> Set key -> Set key
-filter =
-    Debug.todo "filter"
+filter check (Internal.AVLSet comparator _ (Internal.Set_elm_builtin root)) =
+    Internal.foldl
+        (Internal.filter comparator (\key _ -> check key))
+        ( 0, Internal.nil )
+        root
+        |> untuple comparator
 
 
+{-| -}
 partition : (key -> Bool) -> Set key -> ( Set key, Set key )
-partition =
-    Debug.todo "partition"
+partition check (Internal.AVLSet comparator _ (Internal.Set_elm_builtin root)) =
+    Internal.foldl
+        (Internal.partition comparator (\key _ -> check key))
+        ( ( 0, Internal.nil ), ( 0, Internal.nil ) )
+        root
+        |> Tuple.mapBoth (untuple comparator) (untuple comparator)
 
 
+{-| -}
 foldl : (key -> acc -> acc) -> acc -> Set key -> acc
-foldl =
-    Debug.todo "foldl"
+foldl fn acc (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
+    Internal.foldl (\key _ semiacc -> fn key semiacc) acc root
 
 
+{-| -}
 foldr : (key -> acc -> acc) -> acc -> Set key -> acc
-foldr =
-    Debug.todo "foldr"
+foldr fn acc (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
+    Internal.foldr (\key _ semiacc -> fn key semiacc) acc root
 
 
 
 -- C O M B I N E
 
 
+{-| -}
 union : Set key -> Set key -> Set key
-union =
-    Debug.todo "union"
+union left right =
+    foldl insert right left
 
 
-diff : Set key -> Set key -> Set key
-diff =
-    Debug.todo "diff"
-
-
+{-| -}
 intersect : Set key -> Set key -> Set key
-intersect =
-    Debug.todo "intersect"
+intersect left right =
+    filter (\key -> member key right) left
 
 
-merge :
-    (left -> acc -> acc)
-    -> (left -> right -> acc -> acc)
-    -> (right -> acc -> acc)
-    -> Set ft
-    -> Set ght
-    -> acc
-    -> acc
-merge =
-    Debug.todo "merge"
+{-| -}
+diff : Set key -> Set key -> Set key
+diff left right =
+    foldl remove left right

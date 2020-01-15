@@ -12,12 +12,10 @@ module Internal exposing
     , insert
     , leaf
     , map
-    , merge
     , nil
     , partition
     , remove
     , singleton
-    , toList
     )
 
 
@@ -75,31 +73,23 @@ singleton key value =
     RBNode_elm_builtin 1 key value nil nil
 
 
-fromList : Comparator key -> ( key, value ) -> ( Int, Node key value ) -> ( Int, Node key value )
-fromList comparator ( key, value ) ( count, root ) =
+fromList :
+    Comparator key
+    -> (entity -> key)
+    -> (entity -> value)
+    -> entity
+    -> ( Int, Node key value )
+    -> ( Int, Node key value )
+fromList comparator toKey toValue entity ( count, root ) =
     let
         ( added, nextRoot ) =
-            insert comparator key value root
+            insert comparator (toKey entity) (toValue entity) root
     in
     if added then
         ( count + 1, nextRoot )
 
     else
         ( count, nextRoot )
-
-
-
--- D E C O N S T R U C T I O N
-
-
-toList : Node key value -> List ( key, value )
-toList node =
-    foldr toListStep [] node
-
-
-toListStep : key -> value -> List ( key, value ) -> List ( key, value )
-toListStep key value acc =
-    ( key, value ) :: acc
 
 
 
@@ -351,51 +341,3 @@ foldr fn acc node =
 
         RBNode_elm_builtin _ k v l r ->
             foldr fn (fn k v (foldr fn acc r)) l
-
-
-
--- C O M B I N E
-
-
-merge :
-    Comparator key
-    -> (key -> left -> acc -> acc)
-    -> (key -> left -> right -> acc -> acc)
-    -> (key -> right -> acc -> acc)
-    -> Node key left
-    -> Node key right
-    -> acc
-    -> acc
-merge comparator onLeft onBoth onRight left right acc =
-    let
-        stepAll : key -> right -> ( List ( key, left ), acc ) -> ( List ( key, left ), acc )
-        stepAll rk rv ( list, semiacc ) =
-            case list of
-                [] ->
-                    ( []
-                    , onRight rk rv semiacc
-                    )
-
-                ( lk, lv ) :: rest ->
-                    case comparator lk rk of
-                        LT ->
-                            stepAll rk rv ( rest, onLeft lk lv semiacc )
-
-                        GT ->
-                            ( list
-                            , onRight rk rv semiacc
-                            )
-
-                        EQ ->
-                            ( rest
-                            , onBoth lk lv rv semiacc
-                            )
-
-        stepOverLeft : ( key, left ) -> acc -> acc
-        stepOverLeft ( lk, lv ) semiacc =
-            onLeft lk lv semiacc
-
-        ( leftovers, accAll ) =
-            foldl stepAll ( toList left, acc ) right
-    in
-    List.foldl stepOverLeft accAll leftovers
