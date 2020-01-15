@@ -16,7 +16,7 @@ elm install owanturist/elm-avl-dict
 ## Example
 
 ```elm
-import AVL.Dict as Dict exposing (Comparator, Dict)
+import AVL.Dict as Dict exposing (Dict)
 import AVL.Set as Set exposing (Set)
 
 
@@ -24,7 +24,7 @@ type ID
     = ID Int
 
 
-compareID : Comparator ID
+compareID : ID -> ID -> Order
 compareID (ID x) (ID y) =
     compare x y
 
