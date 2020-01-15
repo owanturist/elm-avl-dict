@@ -1,8 +1,16 @@
-module Internal exposing (AVL(..), Node(..))
+module Internal exposing (AVLDict(..), AVLSet(..), Node(..), Set(..))
 
 
-type AVL key value
-    = AVL (key -> key -> Order) Int (Node key value)
+type AVLDict key value
+    = AVLDict (key -> key -> Order) Int (Node key value)
+
+
+type AVLSet key
+    = AVLSet (key -> key -> Order) Int (Set key)
+
+
+type Set key
+    = Set_elm_builtin (Node key ())
 
 
 type Node key value

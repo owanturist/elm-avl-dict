@@ -56,7 +56,7 @@ Size takes constant `O(1)` time.
 
 -}
 
-import Internal exposing (Node(..))
+import Internal
 
 
 {-| A dictionary of keys and values.
@@ -82,7 +82,7 @@ and find the associated `User`.
 
 -}
 type alias Dict key value =
-    Internal.AVL key value
+    Internal.AVLDict key value
 
 
 {-| A comparator is a function which compares two keys.
@@ -127,29 +127,29 @@ type alias Comparator key =
 -- U T I L S
 
 
-height : Node key value -> Int
+height : Internal.Node key value -> Int
 height node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             0
 
-        RBNode_elm_builtin h _ _ _ _ ->
+        Internal.RBNode_elm_builtin h _ _ _ _ ->
             h
 
 
-nil : Node key value
+nil : Internal.Node key value
 nil =
-    RBEmpty_elm_builtin
+    Internal.RBEmpty_elm_builtin
 
 
-leaf : key -> value -> Node key value -> Node key value -> Node key value
+leaf : key -> value -> Internal.Node key value -> Internal.Node key value -> Internal.Node key value
 leaf key value left right =
-    RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
+    Internal.RBNode_elm_builtin (1 + max (height left) (height right)) key value left right
 
 
-untuple : Comparator key -> ( Int, Node key value ) -> Dict key value
+untuple : Comparator key -> ( Int, Internal.Node key value ) -> Dict key value
 untuple comparator ( count, root ) =
-    Internal.AVL comparator count root
+    Internal.AVLDict comparator count root
 
 
 
@@ -160,7 +160,7 @@ untuple comparator ( count, root ) =
 -}
 emptyWith : Comparator key -> Dict key value
 emptyWith comparator =
-    Internal.AVL comparator 0 nil
+    Internal.AVLDict comparator 0 nil
 
 
 {-| Create an empty dictionary.
@@ -174,7 +174,7 @@ empty =
 -}
 singletonWith : Comparator key -> key -> value -> Dict key value
 singletonWith comparator key value =
-    Internal.AVL comparator 1 (RBNode_elm_builtin 1 key value nil nil)
+    Internal.AVLDict comparator 1 (Internal.RBNode_elm_builtin 1 key value nil nil)
 
 
 {-| Create a dictionary with one key-value pair.
@@ -191,7 +191,7 @@ fromListWith comparator list =
     untuple comparator (List.foldl (fromListHelper comparator) ( 0, nil ) list)
 
 
-fromListHelper : Comparator key -> ( key, value ) -> ( Int, Node key value ) -> ( Int, Node key value )
+fromListHelper : Comparator key -> ( key, value ) -> ( Int, Internal.Node key value ) -> ( Int, Internal.Node key value )
 fromListHelper comparator ( key, value ) ( count, root ) =
     let
         ( added, nextRoot ) =
@@ -268,27 +268,27 @@ toListStep key value acc =
 Replaces value when there is a collision.
 -}
 insert : key -> value -> Dict key value -> Dict key value
-insert key value (Internal.AVL comparator count root) =
+insert key value (Internal.AVLDict comparator count root) =
     let
         ( added, nextRoot ) =
             insertHelp comparator key value root
     in
     if added then
-        Internal.AVL comparator (count + 1) nextRoot
+        Internal.AVLDict comparator (count + 1) nextRoot
 
     else
-        Internal.AVL comparator count nextRoot
+        Internal.AVLDict comparator count nextRoot
 
 
-insertHelp : Comparator key -> key -> value -> Node key value -> ( Bool, Node key value )
+insertHelp : Comparator key -> key -> value -> Internal.Node key value -> ( Bool, Internal.Node key value )
 insertHelp comparator key value node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             ( True
-            , RBNode_elm_builtin 1 key value nil nil
+            , Internal.RBNode_elm_builtin 1 key value nil nil
             )
 
-        RBNode_elm_builtin h k v l r ->
+        Internal.RBNode_elm_builtin h k v l r ->
             case comparator key k of
                 LT ->
                     let
@@ -306,31 +306,31 @@ insertHelp comparator key value node =
 
                 EQ ->
                     ( False
-                    , RBNode_elm_builtin h key value l r
+                    , Internal.RBNode_elm_builtin h key value l r
                     )
 
 
-balance : key -> value -> Node key value -> Node key value -> Node key value
+balance : key -> value -> Internal.Node key value -> Internal.Node key value -> Internal.Node key value
 balance pk pv pl pr =
     case ( pl, pr ) of
-        ( RBEmpty_elm_builtin, RBEmpty_elm_builtin ) ->
-            RBNode_elm_builtin 1 pk pv nil nil
+        ( Internal.RBEmpty_elm_builtin, Internal.RBEmpty_elm_builtin ) ->
+            Internal.RBNode_elm_builtin 1 pk pv nil nil
 
-        ( RBNode_elm_builtin lh lk lv ll lr, RBEmpty_elm_builtin ) ->
+        ( Internal.RBNode_elm_builtin lh lk lv ll lr, Internal.RBEmpty_elm_builtin ) ->
             if lh > 1 then
                 rotateRight pk pv lk lv ll lr pr
 
             else
-                RBNode_elm_builtin (1 + lh) pk pv pl pr
+                Internal.RBNode_elm_builtin (1 + lh) pk pv pl pr
 
-        ( RBEmpty_elm_builtin, RBNode_elm_builtin rh rk rv rl rr ) ->
+        ( Internal.RBEmpty_elm_builtin, Internal.RBNode_elm_builtin rh rk rv rl rr ) ->
             if rh > 1 then
                 rotateLeft pk pv pl rk rv rl rr
 
             else
-                RBNode_elm_builtin (1 + rh) pk pv pl pr
+                Internal.RBNode_elm_builtin (1 + rh) pk pv pl pr
 
-        ( RBNode_elm_builtin lh lk lv ll lr, RBNode_elm_builtin rh rk rv rl rr ) ->
+        ( Internal.RBNode_elm_builtin lh lk lv ll lr, Internal.RBNode_elm_builtin rh rk rv rl rr ) ->
             if lh - rh < -1 then
                 rotateLeft pk pv pl rk rv rl rr
 
@@ -338,16 +338,16 @@ balance pk pv pl pr =
                 rotateRight pk pv lk lv ll lr pr
 
             else
-                RBNode_elm_builtin (1 + max lh rh) pk pv pl pr
+                Internal.RBNode_elm_builtin (1 + max lh rh) pk pv pl pr
 
 
-rotateLeft : key -> value -> Node key value -> key -> value -> Node key value -> Node key value -> Node key value
+rotateLeft : key -> value -> Internal.Node key value -> key -> value -> Internal.Node key value -> Internal.Node key value -> Internal.Node key value
 rotateLeft pk pv pl rk rv rl rr =
     case rl of
-        RBEmpty_elm_builtin ->
-            leaf rk rv (RBNode_elm_builtin (1 + height pl) pk pv pl nil) rr
+        Internal.RBEmpty_elm_builtin ->
+            leaf rk rv (Internal.RBNode_elm_builtin (1 + height pl) pk pv pl nil) rr
 
-        RBNode_elm_builtin lh lk lv ll lr ->
+        Internal.RBNode_elm_builtin lh lk lv ll lr ->
             if lh > height rr then
                 leaf lk lv (leaf pk pv pl ll) (leaf rk rv lr rr)
 
@@ -355,13 +355,13 @@ rotateLeft pk pv pl rk rv rl rr =
                 leaf rk rv (leaf pk pv pl rl) rr
 
 
-rotateRight : key -> value -> key -> value -> Node key value -> Node key value -> Node key value -> Node key value
+rotateRight : key -> value -> key -> value -> Internal.Node key value -> Internal.Node key value -> Internal.Node key value -> Internal.Node key value
 rotateRight pk pv lk lv ll lr pr =
     case lr of
-        RBEmpty_elm_builtin ->
-            leaf lk lv ll (RBNode_elm_builtin (1 + height pr) pk pv nil pr)
+        Internal.RBEmpty_elm_builtin ->
+            leaf lk lv ll (Internal.RBNode_elm_builtin (1 + height pr) pk pv nil pr)
 
-        RBNode_elm_builtin rh rk rv rl rr ->
+        Internal.RBNode_elm_builtin rh rk rv rl rr ->
             if height ll < rh then
                 leaf rk rv (leaf lk lv ll rl) (leaf pk pv rr pr)
 
@@ -373,22 +373,22 @@ rotateRight pk pv lk lv ll lr pr =
 If the key is not found, no changes are made.
 -}
 remove : key -> Dict key value -> Dict key value
-remove key ((Internal.AVL comparator count root) as avl) =
+remove key ((Internal.AVLDict comparator count root) as avl) =
     case removeHelp comparator key root of
         Nothing ->
             avl
 
         Just nextRoot ->
-            Internal.AVL comparator (count - 1) nextRoot
+            Internal.AVLDict comparator (count - 1) nextRoot
 
 
-removeHelp : Comparator key -> key -> Node key value -> Maybe (Node key value)
+removeHelp : Comparator key -> key -> Internal.Node key value -> Maybe (Internal.Node key value)
 removeHelp comparator key node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             Nothing
 
-        RBNode_elm_builtin _ k v l r ->
+        Internal.RBNode_elm_builtin _ k v l r ->
             case comparator key k of
                 LT ->
                     Maybe.map (\nextL -> balance k v nextL r) (removeHelp comparator key l)
@@ -414,13 +414,13 @@ removeHelp comparator key node =
                                 Just (leaf maxK maxV nextL r)
 
 
-removeMin : Node key value -> Maybe ( key, value, Node key value )
+removeMin : Internal.Node key value -> Maybe ( key, value, Internal.Node key value )
 removeMin node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             Nothing
 
-        RBNode_elm_builtin _ k v l r ->
+        Internal.RBNode_elm_builtin _ k v l r ->
             case removeMin l of
                 Nothing ->
                     Just ( k, v, r )
@@ -429,13 +429,13 @@ removeMin node =
                     Just ( rk, rv, balance k v nextL r )
 
 
-removeMax : Node key value -> Maybe ( key, value, Node key value )
+removeMax : Internal.Node key value -> Maybe ( key, value, Internal.Node key value )
 removeMax node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             Nothing
 
-        RBNode_elm_builtin _ k v l r ->
+        Internal.RBNode_elm_builtin _ k v l r ->
             case removeMax r of
                 Nothing ->
                     Just ( k, v, l )
@@ -470,7 +470,7 @@ update key transform avl =
 Useful when you need to create new empty dictionary using same comparator.
 -}
 clear : Dict key value -> Dict key value
-clear (Internal.AVL comparator _ _) =
+clear (Internal.AVLDict comparator _ _) =
     emptyWith comparator
 
 
@@ -489,7 +489,7 @@ isEmpty avl =
 It takes constant time to request the size.
 -}
 size : Dict key value -> Int
-size (Internal.AVL _ count _) =
+size (Internal.AVLDict _ count _) =
     count
 
 
@@ -512,17 +512,17 @@ This is useful when you are not sure if a key will be in the dictionary.
 
 -}
 get : key -> Dict key value -> Maybe value
-get key (Internal.AVL comparator _ root) =
+get key (Internal.AVLDict comparator _ root) =
     getHelper comparator key root
 
 
-getHelper : Comparator key -> key -> Node key value -> Maybe value
+getHelper : Comparator key -> key -> Internal.Node key value -> Maybe value
 getHelper comparator target node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             Nothing
 
-        RBNode_elm_builtin _ key value left right ->
+        Internal.RBNode_elm_builtin _ key value left right ->
             case comparator target key of
                 LT ->
                     getHelper comparator target left
@@ -541,26 +541,26 @@ getHelper comparator target node =
 {-| Apply a function to all values in a dictionary.
 -}
 map : (key -> a -> b) -> Dict key a -> Dict key b
-map fn (Internal.AVL comparator count root) =
-    Internal.AVL comparator count (mapHelp fn root)
+map fn (Internal.AVLDict comparator count root) =
+    Internal.AVLDict comparator count (mapHelp fn root)
 
 
-mapHelp : (key -> a -> b) -> Node key a -> Node key b
+mapHelp : (key -> a -> b) -> Internal.Node key a -> Internal.Node key b
 mapHelp fn node =
     case node of
-        RBEmpty_elm_builtin ->
-            RBEmpty_elm_builtin
+        Internal.RBEmpty_elm_builtin ->
+            Internal.RBEmpty_elm_builtin
 
-        RBNode_elm_builtin h k v l r ->
-            RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
+        Internal.RBNode_elm_builtin h k v l r ->
+            Internal.RBNode_elm_builtin h k (fn k v) (mapHelp fn l) (mapHelp fn r)
 
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
 filter : (key -> value -> Bool) -> Dict key value -> Dict key value
-filter check (Internal.AVL comparator _ root) =
+filter check (Internal.AVLDict comparator _ root) =
     let
-        step : key -> value -> ( Int, Node key value ) -> ( Int, Node key value )
+        step : key -> value -> ( Int, Internal.Node key value ) -> ( Int, Internal.Node key value )
         step key value (( count, node ) as acc) =
             if check key value then
                 ( count + 1
@@ -578,9 +578,9 @@ The first dictionary contains all key-value pairs which passed the test,
 and the second contains the pairs that did not.
 -}
 partition : (key -> value -> Bool) -> Dict key value -> ( Dict key value, Dict key value )
-partition check (Internal.AVL comparator _ root) =
+partition check (Internal.AVLDict comparator _ root) =
     let
-        step : key -> value -> ( ( Int, Node key value ), ( Int, Node key value ) ) -> ( ( Int, Node key value ), ( Int, Node key value ) )
+        step : key -> value -> ( ( Int, Internal.Node key value ), ( Int, Internal.Node key value ) ) -> ( ( Int, Internal.Node key value ), ( Int, Internal.Node key value ) )
         step key value ( ( leftCount, leftRoot ) as left, ( rightCount, rightRoot ) as right ) =
             if check key value then
                 ( ( leftCount + 1
@@ -605,34 +605,34 @@ partition check (Internal.AVL comparator _ root) =
 {-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
 -}
 foldl : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
-foldl fn acc (Internal.AVL _ _ root) =
+foldl fn acc (Internal.AVLDict _ _ root) =
     foldlHelp fn acc root
 
 
-foldlHelp : (key -> value -> acc -> acc) -> acc -> Node key value -> acc
+foldlHelp : (key -> value -> acc -> acc) -> acc -> Internal.Node key value -> acc
 foldlHelp fn acc node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             acc
 
-        RBNode_elm_builtin _ k v l r ->
+        Internal.RBNode_elm_builtin _ k v l r ->
             foldlHelp fn (fn k v (foldlHelp fn acc l)) r
 
 
 {-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
 -}
 foldr : (key -> value -> acc -> acc) -> acc -> Dict key value -> acc
-foldr fn acc (Internal.AVL _ _ root) =
+foldr fn acc (Internal.AVLDict _ _ root) =
     foldrHelp fn acc root
 
 
-foldrHelp : (key -> value -> acc -> acc) -> acc -> Node key value -> acc
+foldrHelp : (key -> value -> acc -> acc) -> acc -> Internal.Node key value -> acc
 foldrHelp fn acc node =
     case node of
-        RBEmpty_elm_builtin ->
+        Internal.RBEmpty_elm_builtin ->
             acc
 
-        RBNode_elm_builtin _ k v l r ->
+        Internal.RBNode_elm_builtin _ k v l r ->
             foldrHelp fn (fn k v (foldrHelp fn acc r)) l
 
 
@@ -691,7 +691,7 @@ merge :
     -> Dict key right
     -> acc
     -> acc
-merge onLeft onBoth onRight left (Internal.AVL comparator _ right) acc =
+merge onLeft onBoth onRight left (Internal.AVLDict comparator _ right) acc =
     let
         stepAll : key -> right -> ( List ( key, left ), acc ) -> ( List ( key, left ), acc )
         stepAll rk rv ( list, semiacc ) =
