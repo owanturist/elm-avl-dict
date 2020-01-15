@@ -1,4 +1,4 @@
-# [AVL](https://en.wikipedia.org/wiki/AVL_tree) based Elm Dict
+# [AVL](https://en.wikipedia.org/wiki/AVL_tree) based Elm Dict and Set
 
 [![Build Status](https://travis-ci.com/owanturist/elm-avl-dict.svg?branch=master)](https://travis-ci.com/owanturist/elm-avl-dict)
 
