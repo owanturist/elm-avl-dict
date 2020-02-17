@@ -591,6 +591,110 @@ getSuite =
         ]
 
 
+minimumSuite : Test
+minimumSuite =
+    describe "AVL.Dict.minimum"
+        [ test "AVL.Dict.empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.minimum
+                    |> Expect.equal Nothing
+
+        --
+        , fuzz2 Fuzz.int Fuzz.char "AVL.Dict.singleton" <|
+            \key value ->
+                Dict.singleton key value
+                    |> Dict.minimum
+                    |> Expect.equal (Just ( key, value ))
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.minimum
+                    |> Expect.equal
+                        (List.foldl
+                            (\( key, value ) acc ->
+                                case acc of
+                                    Nothing ->
+                                        Just ( key, value )
+
+                                    Just ( min, _ ) ->
+                                        if key > min then
+                                            acc
+
+                                        else
+                                            Just ( key, value )
+                            )
+                            Nothing
+                            list
+                        )
+
+        --
+        , test "Docs" <|
+            \_ ->
+                [ ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+                , ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+                , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
+                ]
+                    |> Dict.fromList
+                    |> Dict.minimum
+                    |> Expect.equal (Just ( "Alice", { name = "Alice", age = 28, height = 1.65 } ))
+        ]
+
+
+maximumSuite : Test
+maximumSuite =
+    describe "AVL.Dict.maximum"
+        [ test "AVL.Dict.empty" <|
+            \_ ->
+                Dict.empty
+                    |> Dict.maximum
+                    |> Expect.equal Nothing
+
+        --
+        , fuzz2 Fuzz.int Fuzz.char "AVL.Dict.singleton" <|
+            \key value ->
+                Dict.singleton key value
+                    |> Dict.maximum
+                    |> Expect.equal (Just ( key, value ))
+
+        --
+        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+            \list ->
+                Dict.fromList list
+                    |> Dict.maximum
+                    |> Expect.equal
+                        (List.foldl
+                            (\( key, value ) acc ->
+                                case acc of
+                                    Nothing ->
+                                        Just ( key, value )
+
+                                    Just ( min, _ ) ->
+                                        if key < min then
+                                            acc
+
+                                        else
+                                            Just ( key, value )
+                            )
+                            Nothing
+                            list
+                        )
+
+        --
+        , test "Docs" <|
+            \_ ->
+                [ ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+                , ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+                , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
+                ]
+                    |> Dict.fromList
+                    |> Dict.maximum
+                    |> Expect.equal (Just ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } ))
+        ]
+
+
 
 -- T R A N S F O R M
 
