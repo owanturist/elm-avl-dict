@@ -4,7 +4,7 @@ module AVL.Dict exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
     , insert, remove, update, clear
-    , isEmpty, size, member, get
+    , isEmpty, size, member, get, minimum, maximum
     , map, filter, partition, foldl, foldr
     , union, diff, intersect, merge
     )
@@ -42,7 +42,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, get
+@docs isEmpty, size, member, get, minimum, maximum
 
 
 # Transform
@@ -188,7 +188,7 @@ fromList =
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
 
-    keys (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
+    Dict.keys (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
 
 -}
 keys : Dict key value -> List key
@@ -198,7 +198,7 @@ keys dict =
 
 {-| Get all of the values in a dictionary, in the order of their keys.
 
-    values (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
+    Dict.values (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
 
 -}
 values : Dict key value -> List value
@@ -208,7 +208,7 @@ values dict =
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 
-    toList (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
+    Dict.toList (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
 
 -}
 toList : Dict key value -> List ( key, value )
@@ -312,16 +312,68 @@ member key dict =
 This is useful when you are not sure if a key will be in the dictionary.
 
     animals =
-        fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
+        Dict.fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
 
-    get "Tom" animals == Just Cat
-    get "Jerry" animals == Just Mouse
-    get "Spike" animals == Nothing
+    Dict.get "Tom" animals == Just Cat
+    Dict.get "Jerry" animals == Just Mouse
+    Dict.get "Spike" animals == Nothing
 
 -}
 get : key -> Dict key value -> Maybe value
 get key (Internal.AVLDict comparator _ root) =
     Internal.get comparator key root
+
+
+{-| Get the key-value pair associated with minimum key. If Dict is empty return Nothing.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    type alias User =
+        { name : String
+        , age : Int
+        , height : Float
+        }
+
+    users : Dict String User
+    users =
+        Dict.fromList
+            [ ( "Bob", User "Bob" 19 1.82 )
+            , ( "Alice", User "Alice" 28 1.65 )
+            , ( "Chuck", User "Chuck" 33 1.75 )
+            ]
+
+    Dict.minimum users == Just ( "Alice", User "Alice" 28 1.65 )
+
+-}
+minimum : Dict key value -> Maybe ( key, value )
+minimum (Internal.AVLDict _ _ root) =
+    Internal.minimum root
+
+
+{-| Get the key-value pair associated with maximum key. If Dict is empty return Nothing.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    type alias User =
+        { name : String
+        , age : Int
+        , height : Float
+        }
+
+    users : Dict String User
+    users =
+        Dict.fromList
+            [ ( "Bob", User "Bob" 19 1.82 )
+            , ( "Alice", User "Alice" 28 1.65 )
+            , ( "Chuck", User "Chuck" 33 1.75 )
+            ]
+
+    Dict.maximum users == Just ( "Chuck", User "Chuck" 33 1.75 )
+
+-}
+maximum : Dict key value -> Maybe ( key, value )
+maximum (Internal.AVLDict _ _ root) =
+    Internal.maximum root
 
 
 

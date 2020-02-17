@@ -12,6 +12,8 @@ module Internal exposing
     , insert
     , leaf
     , map
+    , maximum
+    , minimum
     , nil
     , partition
     , remove
@@ -267,6 +269,36 @@ get comparator target node =
 
                 EQ ->
                     Just value
+
+
+minimum : Node key value -> Maybe ( key, value )
+minimum node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v l _ ->
+            case minimum l of
+                Nothing ->
+                    Just ( k, v )
+
+                just ->
+                    just
+
+
+maximum : Node key value -> Maybe ( key, value )
+maximum node =
+    case node of
+        RBEmpty_elm_builtin ->
+            Nothing
+
+        RBNode_elm_builtin _ k v _ r ->
+            case maximum r of
+                Nothing ->
+                    Just ( k, v )
+
+                just ->
+                    just
 
 
 
