@@ -188,7 +188,7 @@ fromList =
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
 
-    keys (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
+    Dict.keys (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
 
 -}
 keys : Dict key value -> List key
@@ -198,7 +198,7 @@ keys dict =
 
 {-| Get all of the values in a dictionary, in the order of their keys.
 
-    values (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
+    Dict.values (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
 
 -}
 values : Dict key value -> List value
@@ -208,7 +208,7 @@ values dict =
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 
-    toList (fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
+    Dict.toList (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
 
 -}
 toList : Dict key value -> List ( key, value )
@@ -312,11 +312,11 @@ member key dict =
 This is useful when you are not sure if a key will be in the dictionary.
 
     animals =
-        fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
+        Dict.fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
 
-    get "Tom" animals == Just Cat
-    get "Jerry" animals == Just Mouse
-    get "Spike" animals == Nothing
+    Dict.get "Tom" animals == Just Cat
+    Dict.get "Jerry" animals == Just Mouse
+    Dict.get "Spike" animals == Nothing
 
 -}
 get : key -> Dict key value -> Maybe value
