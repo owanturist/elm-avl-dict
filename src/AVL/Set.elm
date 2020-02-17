@@ -4,7 +4,7 @@ module AVL.Set exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , toList
     , insert, remove, toggle, clear
-    , isEmpty, size, member
+    , isEmpty, size, member, minimum, maximum
     , map, filter, partition, foldl, foldr
     , union, diff, intersect
     )
@@ -41,7 +41,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member
+@docs isEmpty, size, member, minimum, maximum
 
 
 # Transform
@@ -244,6 +244,38 @@ member key (Internal.AVLSet comparator _ (Internal.Set_elm_builtin root)) =
     Internal.get comparator key root /= Nothing
 
 
+{-| Get the key-value pair associated with minimum key. If Set is empty return Nothing.
+
+    import AVL.Set as Set exposing (Set)
+
+    numbers : Set Int
+    numbers =
+        Set.fromList [ 0, 1, -1, 2, -2 ]
+
+    Set.minimum numbers == Just -2
+
+-}
+minimum : Set key -> Maybe key
+minimum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
+    Maybe.map Tuple.first (Internal.minimum root)
+
+
+{-| Get the key-value pair associated with maximum key. If Set is empty return Nothing.
+
+    import AVL.Set as Set exposing (Set)
+
+    numbers : Set Int
+    numbers =
+        Set.fromList [ 0, 1, -1, 2, -2 ]
+
+    Set.maximum numbers == Just 2
+
+-}
+maximum : Set key -> Maybe key
+maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
+    Maybe.map Tuple.first (Internal.maximum root)
+
+
 
 -- T R A N S F O R M
 
@@ -260,11 +292,11 @@ map fn set =
 
     numbers : Set Int
     numbers =
-        fromList [ -2, -1, 0, 1, 2 ]
+        Set.fromList [ -2, -1, 0, 1, 2 ]
 
     positives : Set Int
     positives =
-        filter (\x -> x > 0) numbers
+        Set.filter (\x -> x > 0) numbers
 
     -- positives == [ 0, 1, 2 ]
 
