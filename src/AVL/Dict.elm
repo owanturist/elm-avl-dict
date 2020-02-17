@@ -4,7 +4,7 @@ module AVL.Dict exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
     , insert, remove, update, clear
-    , isEmpty, size, member, get
+    , isEmpty, size, member, get, minimum, maximum
     , map, filter, partition, foldl, foldr
     , union, diff, intersect, merge
     )
@@ -42,7 +42,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, get
+@docs isEmpty, size, member, get, minimum, maximum
 
 
 # Transform
@@ -322,6 +322,58 @@ This is useful when you are not sure if a key will be in the dictionary.
 get : key -> Dict key value -> Maybe value
 get key (Internal.AVLDict comparator _ root) =
     Internal.get comparator key root
+
+
+{-| Get the key-value pair associated with minimum key. If Dict is empty return Nothing.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    type alias User =
+        { name : String
+        , age : Int
+        , height : Float
+        }
+
+    users : Dict String User
+    users =
+        Dict.fromList
+            [ ( "Bob", User "Bob" 19 1.82 )
+            , ( "Alice", User "Alice" 28 1.65 )
+            , ( "Chuck", User "Chuck" 33 1.75 )
+            ]
+
+    Dict.minimum users == Just ( "Alice", User "Alice" 28 1.65 )
+
+-}
+minimum : Dict key value -> Maybe ( key, value )
+minimum (Internal.AVLDict _ _ root) =
+    Internal.minimum root
+
+
+{-| Get the key-value pair associated with maximum key. If Dict is empty return Nothing.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    type alias User =
+        { name : String
+        , age : Int
+        , height : Float
+        }
+
+    users : Dict String User
+    users =
+        Dict.fromList
+            [ ( "Bob", User "Bob" 19 1.82 )
+            , ( "Alice", User "Alice" 28 1.65 )
+            , ( "Chuck", User "Chuck" 33 1.75 )
+            ]
+
+    Dict.maximum users == Just ( "Chuck", User "Chuck" 33 1.75 )
+
+-}
+maximum : Dict key value -> Maybe ( key, value )
+maximum (Internal.AVLDict _ _ root) =
+    Internal.maximum root
 
 
 
