@@ -404,7 +404,8 @@ maximum (Internal.AVLDict _ _ root) =
             , ( "Chuck", 33 1.75 )
             ]
 
-    (score |> Dict.keyComparator) "A" "Z" == LT
+    (score |> Dict.keyComparator) "A" "Z"
+    --> LT
 
 -}
 keyComparator : Dict key value -> Comparator key

@@ -280,7 +280,8 @@ maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
     numbers =
         Set.fromList [ 0, 1, -1, 2, -2 ]
 
-    (numbers |> Set.keyComparator) 2 3 == LT
+    (numbers |> Set.keyComparator) 2 3
+    --> LT
 
 -}
 keyComparator : Set key -> Comparator key
