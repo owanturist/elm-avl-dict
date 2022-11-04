@@ -4,7 +4,7 @@ module AVL.Set exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , toList
     , insert, remove, toggle, clear
-    , isEmpty, size, member, minimum, maximum
+    , isEmpty, size, member, minimum, maximum, keyComparator
     , map, filter, partition, foldl, foldr
     , union, diff, intersect
     )
@@ -41,7 +41,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, minimum, maximum
+@docs isEmpty, size, member, minimum, maximum, keyComparator
 
 
 # Transform
@@ -270,6 +270,22 @@ minimum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
 maximum : Set key -> Maybe key
 maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
     Maybe.map Tuple.first (Internal.maximum root)
+
+
+{-| Get the [`Comparator`](#Comparator) for its keys.
+
+    import AVL.Set as Set exposing (Set)
+
+    numbers : Set Int
+    numbers =
+        Set.fromList [ 0, 1, -1, 2, -2 ]
+
+    (numbers |> Set.keyComparator) 2 3 == LT
+
+-}
+keyComparator : Set key -> Comparator key
+keyComparator set =
+    set |> Internal.setKeyComparator
 
 
 

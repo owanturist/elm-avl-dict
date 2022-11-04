@@ -4,7 +4,7 @@ module AVL.Dict exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
     , insert, remove, update, clear
-    , isEmpty, size, member, get, minimum, maximum
+    , isEmpty, size, member, get, minimum, maximum, keyComparator
     , map, filter, partition, foldl, foldr
     , union, diff, intersect, merge
     )
@@ -42,7 +42,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, get, minimum, maximum
+@docs isEmpty, size, member, get, minimum, maximum, keyComparator
 
 
 # Transform
@@ -390,6 +390,26 @@ minimum (Internal.AVLDict _ _ root) =
 maximum : Dict key value -> Maybe ( key, value )
 maximum (Internal.AVLDict _ _ root) =
     Internal.maximum root
+
+
+{-| Get the [`Comparator`](#Comparator) for its keys.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    score : Dict String Int
+    score =
+        Dict.fromList
+            [ ( "Bob", 1.82 )
+            , ( "Alice", 1.65 )
+            , ( "Chuck", 33 1.75 )
+            ]
+
+    (score |> Dict.keyComparator) "A" "Z" == LT
+
+-}
+keyComparator : Dict key value -> Comparator key
+keyComparator dict =
+    dict |> Internal.dictKeyComparator
 
 
 
