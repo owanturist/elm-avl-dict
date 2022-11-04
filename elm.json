@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "owanturist/elm-avl-dict",
-    "summary": "Elm Dict and Set with custom keys based on AVL trees",
+    "summary": "Dict and Set allowing custom keys based on AVL trees",
     "license": "BSD-3-Clause",
     "version": "2.1.0",
     "exposed-modules": [
