@@ -89,7 +89,7 @@ type alias Set key =
     compareID (ID x) (ID y) =
         compare x y
 
-    ids : Set ID User
+    ids : Set ID
     ids =
         Set.fromListWith compareID [ ID 0, ID 1, ID 2 ]
 

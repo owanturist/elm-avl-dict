@@ -32,9 +32,9 @@ compareID (ID x) (ID y) =
 users : Dict ID User
 users =
     Dict.fromListWith compareID
-        [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
-        , ( ID 1, User (ID 1) "Bob" 19 1.82 )
-        , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
+        [ ( ID 0, { id = ID 0, name = "Alice", age = 28, height = 1.65 } )
+        , ( ID 1, { id = ID 1, name = "Bob", age = 19, height = 1.82 } )
+        , ( ID 2, { id = ID 2, name = "Chuck", age = 33, height = 1.75 } )
         ]
 
 

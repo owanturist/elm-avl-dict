@@ -78,9 +78,9 @@ and find the associated `User`.
     users : Dict String User
     users =
         Dict.fromList
-            [ ( "Alice", User "Alice" 28 1.65 )
-            , ( "Bob", User "Bob" 19 1.82 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
+            [ ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+            , ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+            , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
             ]
 
     type alias User =
@@ -115,9 +115,9 @@ and find the associated `User`.
     users : Dict ID User
     users =
         Dict.fromListWith compareID
-            [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
-            , ( ID 1, User (ID 1) "Bob" 19 1.82 )
-            , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
+            [ ( ID 0, { id = ID 0, name = "Alice", age = 28, height = 1.65 } )
+            , ( ID 1, { id = ID 1, name = "Bob", age = 19, height = 1.82 } )
+            , ( ID 2, { id = ID 2, name = "Chuck", age = 33, height = 1.75 } )
             ]
 
     alice : Maybe User
@@ -399,9 +399,9 @@ maximum (Internal.AVLDict _ _ root) =
     score : Dict String Int
     score =
         Dict.fromList
-            [ ( "Bob", 1.82 )
-            , ( "Alice", 1.65 )
-            , ( "Chuck", 33 1.75 )
+            [ ( "Bob", 82 )
+            , ( "Alice", 65 )
+            , ( "Chuck", 33 )
             ]
 
     (score |> Dict.keyComparator) "A" "Z"
