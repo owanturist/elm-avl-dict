@@ -1,8 +1,8 @@
 module DictTests exposing (..)
 
 import AVL.Dict as Dict
-import Expect
-import Fuzz
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer)
 import Internal exposing (AVLDict(..), Node(..))
 import List.Extra
 import Test exposing (Test, describe, fuzz, fuzz2, test)
@@ -799,18 +799,16 @@ partitionSuite =
 unionSuite : Test
 unionSuite =
     describe "AVL.Dict.union"
-        [ test "left is empty" <|
-            \_ ->
-                Dict.union Dict.empty (Dict.singleton 0 'A')
-                    |> Dict.toList
-                    |> Expect.equalLists [ ( 0, 'A' ) ]
+        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+            \side ->
+                Dict.union Dict.empty side
+                    |> expectEqualDicts side
 
         --
-        , test "right is empty" <|
-            \_ ->
-                Dict.union (Dict.singleton 0 'A') Dict.empty
-                    |> Dict.toList
-                    |> Expect.equalLists [ ( 0, 'A' ) ]
+        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+            \side ->
+                Dict.union side Dict.empty
+                    |> expectEqualDicts side
 
         --
         , test "unions" <|
@@ -845,18 +843,16 @@ unionSuite =
 intersectSuite : Test
 intersectSuite =
     describe "AVL.Dict.intersect"
-        [ test "left is empty" <|
-            \_ ->
-                Dict.intersect Dict.empty (Dict.singleton 0 'A')
-                    |> Dict.toList
-                    |> Expect.equalLists []
+        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+            \side ->
+                Dict.intersect Dict.empty side
+                    |> expectEqualDicts Dict.empty
 
         --
-        , test "right is empty" <|
-            \_ ->
-                Dict.intersect (Dict.singleton 0 'A') Dict.empty
-                    |> Dict.toList
-                    |> Expect.equalLists []
+        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+            \side ->
+                Dict.intersect side Dict.empty
+                    |> expectEqualDicts Dict.empty
 
         --
         , test "intersects" <|
@@ -887,21 +883,19 @@ intersectSuite =
 diffSuite : Test
 diffSuite =
     describe "AVL.Dict.diff"
-        [ test "left is empty" <|
-            \_ ->
-                Dict.diff Dict.empty (Dict.singleton 0 'A')
-                    |> Dict.toList
-                    |> Expect.equalLists []
+        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+            \side ->
+                Dict.diff Dict.empty side
+                    |> expectEqualDicts Dict.empty
 
         --
-        , test "right is empty" <|
-            \_ ->
-                Dict.diff (Dict.singleton 0 'A') Dict.empty
-                    |> Dict.toList
-                    |> Expect.equalLists [ ( 0, 'A' ) ]
+        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+            \side ->
+                Dict.diff side Dict.empty
+                    |> expectEqualDicts side
 
         --
-        , test "diffs" <|
+        , test "example" <|
             \_ ->
                 Dict.diff
                     (Dict.fromList
@@ -985,3 +979,20 @@ mergeSuite =
                         , ""
                         ]
         ]
+
+
+expectEqualDicts : AVLDict key value -> (AVLDict key value -> Expectation)
+expectEqualDicts expected =
+    \actual ->
+        actual
+            |> Dict.toList
+            |> Expect.equalLists
+                (expected |> Dict.toList)
+
+
+dictFuzz :
+    { key : Fuzzer comparableKey, value : Fuzzer value }
+    -> Fuzzer (AVLDict comparableKey value)
+dictFuzz nodeFuzz =
+    Fuzz.map Dict.fromList <|
+        Fuzz.list (Fuzz.pair nodeFuzz.key nodeFuzz.value)
