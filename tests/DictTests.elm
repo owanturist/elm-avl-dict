@@ -325,7 +325,7 @@ insertSuite =
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "ascending keys" <|
+        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "descending keys" <|
             \lo hi ->
                 List.range lo hi
                     |> List.foldr
@@ -334,7 +334,7 @@ insertSuite =
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "descending keys" <|
+        , fuzz2 (Fuzz.intRange -400 -100) (Fuzz.intRange 100 400) "ascending keys" <|
             \lo hi ->
                 List.range lo hi
                     |> List.foldl
