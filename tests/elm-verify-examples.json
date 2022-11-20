@@ -1,0 +1,4 @@
+{
+  "root": "../src",
+  "tests": ["README.md", "AVL.Set", "AVL.Dict"]
+}
