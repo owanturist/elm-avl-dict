@@ -4,7 +4,7 @@ module AVL.Set exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , toList
     , insert, remove, toggle, clear
-    , isEmpty, size, member, minimum, maximum
+    , isEmpty, size, member, minimum, maximum, keyComparator
     , map, filter, partition, foldl, foldr
     , union, diff, intersect
     )
@@ -41,7 +41,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, minimum, maximum
+@docs isEmpty, size, member, minimum, maximum, keyComparator
 
 
 # Transform
@@ -89,7 +89,7 @@ type alias Set key =
     compareID (ID x) (ID y) =
         compare x y
 
-    ids : Set ID User
+    ids : Set ID
     ids =
         Set.fromListWith compareID [ ID 0, ID 1, ID 2 ]
 
@@ -270,6 +270,31 @@ minimum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
 maximum : Set key -> Maybe key
 maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
     Maybe.map Tuple.first (Internal.maximum root)
+
+
+{-| Get the [`Comparator`](#Comparator) for its keys.
+
+    import AVL.Set as Set exposing (Set)
+
+    type ID
+        = ID Int
+
+    compareID : ID -> ID -> Order
+    compareID (ID x) (ID y) =
+        compare x y
+
+    idTable : Set ID
+    idTable =
+        Set.fromListWith compareID
+            [ ID 0, ID 1, ID -1, ID 2, ID -2 ]
+
+    Set.keyComparator idTable (ID 10) (ID 8)
+    --> GT
+
+-}
+keyComparator : Set key -> Comparator key
+keyComparator (Internal.AVLSet comparator _ _) =
+    comparator
 
 
 

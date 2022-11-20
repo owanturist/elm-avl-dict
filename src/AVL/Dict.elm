@@ -4,7 +4,7 @@ module AVL.Dict exposing
     , empty, emptyWith, singleton, singletonWith, fromList, fromListWith
     , keys, values, toList
     , insert, remove, update, clear
-    , isEmpty, size, member, get, minimum, maximum
+    , isEmpty, size, member, get, minimum, maximum, keyComparator
     , map, filter, partition, foldl, foldr
     , union, diff, intersect, merge
     )
@@ -42,7 +42,7 @@ Size takes constant `O(1)` time.
 
 # Query
 
-@docs isEmpty, size, member, get, minimum, maximum
+@docs isEmpty, size, member, get, minimum, maximum, keyComparator
 
 
 # Transform
@@ -78,9 +78,9 @@ and find the associated `User`.
     users : Dict String User
     users =
         Dict.fromList
-            [ ( "Alice", User "Alice" 28 1.65 )
-            , ( "Bob", User "Bob" 19 1.82 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
+            [ ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+            , ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+            , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
             ]
 
     type alias User =
@@ -115,9 +115,9 @@ and find the associated `User`.
     users : Dict ID User
     users =
         Dict.fromListWith compareID
-            [ ( ID 0, User (ID 0) "Alice" 28 1.65 )
-            , ( ID 1, User (ID 1) "Bob" 19 1.82 )
-            , ( ID 2, User (ID 2) "Chuck" 33 1.75 )
+            [ ( ID 0, { id = ID 0, name = "Alice", age = 28, height = 1.65 } )
+            , ( ID 1, { id = ID 1, name = "Bob", age = 19, height = 1.82 } )
+            , ( ID 2, { id = ID 2, name = "Chuck", age = 33, height = 1.75 } )
             ]
 
     alice : Maybe User
@@ -390,6 +390,34 @@ minimum (Internal.AVLDict _ _ root) =
 maximum : Dict key value -> Maybe ( key, value )
 maximum (Internal.AVLDict _ _ root) =
     Internal.maximum root
+
+
+{-| Get the [`Comparator`](#Comparator) for its keys.
+
+    import AVL.Dict as Dict exposing (Dict)
+
+    type ID
+        = ID Int
+
+    compareID : ID -> ID -> Order
+    compareID (ID x) (ID y) =
+        compare x y
+
+    userTable : Dict ID String
+    userTable =
+        Dict.fromListWith compareID
+            [ ( ID 0, "Bob" )
+            , ( ID 1, "Alice" )
+            , ( ID 2, "Chuck" )
+            ]
+
+    Dict.keyComparator userTable (ID 3) (ID 4)
+    --> LT
+
+-}
+keyComparator : Dict key value -> Comparator key
+keyComparator (Internal.AVLDict comparator _ _) =
+    comparator
 
 
 

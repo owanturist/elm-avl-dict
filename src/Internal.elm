@@ -67,7 +67,7 @@ leaf key value left right =
 
 
 
--- C O N N S T R U C T I O N
+-- C O N S T R U C T I O N
 
 
 singleton : key -> value -> Node key value
