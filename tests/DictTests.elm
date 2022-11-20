@@ -992,5 +992,6 @@ dictFuzz :
     -> Fuzzer value
     -> Fuzzer (AVLDict comparableKey value)
 dictFuzz keyFuzz valueFuzz =
-    Fuzz.map Dict.fromList <|
-        Fuzz.list (Fuzz.pair keyFuzz valueFuzz)
+    Fuzz.pair keyFuzz valueFuzz
+        |> Fuzz.list
+        |> Fuzz.map Dict.fromList
