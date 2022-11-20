@@ -6,7 +6,7 @@
   "scripts": {
     "pretest": "elm-verify-examples",
     "test": "elm-test --compiler ./node_modules/.bin/elm",
-    "format": "elm-format src/ tests/ --validate",
+    "format": "elm-format src/ tests/ --yes",
     "analyse": "elm-analyse --elm-format-path=node_modules/.bin/elm-format"
   },
   "repository": {
