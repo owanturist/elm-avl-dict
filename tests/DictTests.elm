@@ -984,10 +984,7 @@ mergeSuite =
 expectEqualDicts : AVLDict key value -> (AVLDict key value -> Expectation)
 expectEqualDicts expected =
     \actual ->
-        actual
-            |> Dict.toList
-            |> Expect.equalLists
-                (expected |> Dict.toList)
+        Expect.equalLists (Dict.toList expected) (Dict.toList actual)
 
 
 dictFuzz :
