@@ -135,7 +135,7 @@ keysSuite =
                     |> Expect.equalLists [ 0, 1, 2, 3, 4, 5 ]
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.keys
@@ -179,7 +179,7 @@ valuesSuite =
                     |> Expect.equalLists [ 'B', 'F', 'A', 'B', 'G', 'C' ]
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.values
@@ -233,7 +233,7 @@ toListSuite =
                         ]
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.toList
@@ -372,7 +372,7 @@ removeSuite =
                     |> Expect.ok
 
         --
-        , fuzz2 (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) (Fuzz.list Fuzz.int) "AVL.Dict.fromList" <|
+        , fuzz2 (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) (Fuzz.list Fuzz.int) "AVL.Dict.fromList" <|
             \puts deletes ->
                 List.foldl
                     (\key -> Result.andThen (validate String.fromInt << Dict.remove key))
@@ -381,7 +381,7 @@ removeSuite =
                     |> Expect.ok
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "clear" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "clear" <|
             \list ->
                 List.foldl
                     (\( key, _ ) -> Result.andThen (validate String.fromInt << Dict.remove key))
@@ -448,7 +448,7 @@ clearSuite =
                     |> Expect.equalLists []
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.clear
@@ -478,14 +478,14 @@ isEmptySuite =
                     |> Expect.equal False
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.char, Fuzz.int ))) "AVL.Dict.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.char Fuzz.int)) "AVL.Dict.fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.isEmpty
                     |> Expect.equal (List.isEmpty list)
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.clear" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.clear" <|
             \list ->
                 Dict.fromList list
                     |> Dict.clear
@@ -511,7 +511,7 @@ sizeSuite =
                     |> Expect.equal 1
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.string, Fuzz.int ))) "AVL.Dict.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.string Fuzz.int)) "AVL.Dict.fromList" <|
             \list ->
                 let
                     uniq =
@@ -522,7 +522,7 @@ sizeSuite =
                     |> Expect.equal (List.length uniq)
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.clear" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.clear" <|
             \list ->
                 Dict.fromList list
                     |> Dict.clear
@@ -548,7 +548,7 @@ memberSuite =
                     |> Expect.equal (x == y)
 
         --
-        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.fromList" <|
             \key list ->
                 Dict.fromList list
                     |> Dict.member key
@@ -579,7 +579,7 @@ getSuite =
                         )
 
         --
-        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+        , fuzz2 Fuzz.int (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.fromList" <|
             \key list ->
                 Dict.fromList list
                     |> Dict.get key
@@ -608,7 +608,7 @@ minimumSuite =
                     |> Expect.equal (Just ( key, value ))
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.minimum
@@ -660,7 +660,7 @@ maximumSuite =
                     |> Expect.equal (Just ( key, value ))
 
         --
-        , fuzz (Fuzz.list (Fuzz.tuple ( Fuzz.int, Fuzz.char ))) "AVL.Dict.fromList" <|
+        , fuzz (Fuzz.list (Fuzz.pair Fuzz.int Fuzz.char)) "AVL.Dict.fromList" <|
             \list ->
                 Dict.fromList list
                     |> Dict.maximum
