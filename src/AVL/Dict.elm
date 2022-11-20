@@ -409,8 +409,8 @@ maximum (Internal.AVLDict _ _ root) =
 
 -}
 keyComparator : Dict key value -> Comparator key
-keyComparator dict =
-    dict |> Internal.dictKeyComparator
+keyComparator (Internal.AVLDict comparator _ _) =
+    comparator
 
 
 

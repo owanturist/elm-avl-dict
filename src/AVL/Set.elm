@@ -285,8 +285,8 @@ maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
 
 -}
 keyComparator : Set key -> Comparator key
-keyComparator set =
-    set |> Internal.setKeyComparator
+keyComparator (Internal.AVLSet comparator _ _) =
+    comparator
 
 
 

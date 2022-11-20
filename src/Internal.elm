@@ -3,7 +3,6 @@ module Internal exposing
     , AVLSet(..)
     , Node(..)
     , Set(..)
-    , dictKeyComparator
     , filter
     , foldl
     , foldr
@@ -18,7 +17,6 @@ module Internal exposing
     , nil
     , partition
     , remove
-    , setKeyComparator
     , singleton
     )
 
@@ -46,16 +44,6 @@ type alias Comparator key =
 
 
 -- U T I L S
-
-
-dictKeyComparator : AVLDict key value -> Comparator key
-dictKeyComparator (AVLDict keyComparatorInternal _ _) =
-    keyComparatorInternal
-
-
-setKeyComparator : AVLSet key -> Comparator key
-setKeyComparator (AVLSet keyComparatorInternal _ _) =
-    keyComparatorInternal
 
 
 height : Node key value -> Int
