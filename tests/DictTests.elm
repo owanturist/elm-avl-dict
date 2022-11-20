@@ -799,13 +799,13 @@ partitionSuite =
 unionSuite : Test
 unionSuite =
     describe "AVL.Dict.union"
-        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+        [ fuzz (dictFuzz Fuzz.int Fuzz.char) "left is empty" <|
             \side ->
                 Dict.union Dict.empty side
                     |> expectEqualDicts side
 
         --
-        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+        , fuzz (dictFuzz Fuzz.int Fuzz.char) "right is empty" <|
             \side ->
                 Dict.union side Dict.empty
                     |> expectEqualDicts side
@@ -843,13 +843,13 @@ unionSuite =
 intersectSuite : Test
 intersectSuite =
     describe "AVL.Dict.intersect"
-        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+        [ fuzz (dictFuzz Fuzz.int Fuzz.char) "left is empty" <|
             \side ->
                 Dict.intersect Dict.empty side
                     |> expectEqualDicts Dict.empty
 
         --
-        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+        , fuzz (dictFuzz Fuzz.int Fuzz.char) "right is empty" <|
             \side ->
                 Dict.intersect side Dict.empty
                     |> expectEqualDicts Dict.empty
@@ -883,13 +883,13 @@ intersectSuite =
 diffSuite : Test
 diffSuite =
     describe "AVL.Dict.diff"
-        [ fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "left is empty" <|
+        [ fuzz (dictFuzz Fuzz.int Fuzz.char) "left is empty" <|
             \side ->
                 Dict.diff Dict.empty side
                     |> expectEqualDicts Dict.empty
 
         --
-        , fuzz (dictFuzz { key = Fuzz.int, value = Fuzz.char }) "right is empty" <|
+        , fuzz (dictFuzz Fuzz.int Fuzz.char) "right is empty" <|
             \side ->
                 Dict.diff side Dict.empty
                     |> expectEqualDicts side
@@ -988,8 +988,9 @@ expectEqualDicts expected =
 
 
 dictFuzz :
-    { key : Fuzzer comparableKey, value : Fuzzer value }
+    Fuzzer comparableKey
+    -> Fuzzer value
     -> Fuzzer (AVLDict comparableKey value)
-dictFuzz nodeFuzz =
+dictFuzz keyFuzz valueFuzz =
     Fuzz.map Dict.fromList <|
-        Fuzz.list (Fuzz.pair nodeFuzz.key nodeFuzz.value)
+        Fuzz.list (Fuzz.pair keyFuzz valueFuzz)
