@@ -1,0 +1,40 @@
+name: main
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  install:
+    name: Install node_modules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+  test:
+    name: Test with elm-test
+    needs: install
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup
+
+      - name: Test
+        run: npm run test
