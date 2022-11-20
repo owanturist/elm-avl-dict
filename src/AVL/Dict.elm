@@ -396,15 +396,22 @@ maximum (Internal.AVLDict _ _ root) =
 
     import AVL.Dict as Dict exposing (Dict)
 
-    score : Dict String Int
-    score =
-        Dict.fromList
-            [ ( "Bob", 82 )
-            , ( "Alice", 65 )
-            , ( "Chuck", 33 )
+    type ID
+        = ID Int
+
+    compareID : ID -> ID -> Order
+    compareID (ID x) (ID y) =
+        compare x y
+
+    userTable : Dict ID String
+    userTable =
+        Dict.fromListWith compareID
+            [ ( ID 0, "Bob" )
+            , ( ID 1, "Alice" )
+            , ( ID 2, "Chuck" )
             ]
 
-    (score |> Dict.keyComparator) "A" "Z"
+    Dict.keyComparator userTable (ID 3) (ID 4)
     --> LT
 
 -}

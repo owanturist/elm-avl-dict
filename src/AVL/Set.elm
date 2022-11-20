@@ -276,12 +276,20 @@ maximum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
 
     import AVL.Set as Set exposing (Set)
 
-    numbers : Set Int
-    numbers =
-        Set.fromList [ 0, 1, -1, 2, -2 ]
+    type ID
+        = ID Int
 
-    (numbers |> Set.keyComparator) 2 3
-    --> LT
+    compareID : ID -> ID -> Order
+    compareID (ID x) (ID y) =
+        compare x y
+
+    idTable : Set ID
+    idTable =
+        Set.fromListWith compareID
+            [ ID 0, ID 1, ID -1, ID 2, ID -2 ]
+
+    Set.keyComparator idTable (ID 10) (ID 8)
+    --> GT
 
 -}
 keyComparator : Set key -> Comparator key
