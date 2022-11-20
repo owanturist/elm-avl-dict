@@ -246,13 +246,11 @@ member key (Internal.AVLSet comparator _ (Internal.Set_elm_builtin root)) =
 
 {-| Get the key-value pair associated with minimum key. If Set is empty return Nothing.
 
-    import AVL.Set as Set exposing (Set)
+    import AVL.Set as Set
 
-    numbers : Set Int
-    numbers =
-        Set.fromList [ 0, 1, -1, 2, -2 ]
-
-    Set.minimum numbers == Just -2
+    Set.fromList [ 0, 1, -1, 2, -2 ]
+        |> Set.minimum
+        --> Just -2
 
 -}
 minimum : Set key -> Maybe key
@@ -262,13 +260,11 @@ minimum (Internal.AVLSet _ _ (Internal.Set_elm_builtin root)) =
 
 {-| Get the key-value pair associated with maximum key. If Set is empty return Nothing.
 
-    import AVL.Set as Set exposing (Set)
+    import AVL.Set as Set
 
-    numbers : Set Int
-    numbers =
-        Set.fromList [ 0, 1, -1, 2, -2 ]
-
-    Set.maximum numbers == Just 2
+    Set.fromList [ 0, 1, -1, 2, -2 ]
+        |> Set.maximum
+    --> Just 2
 
 -}
 maximum : Set key -> Maybe key
@@ -289,6 +285,7 @@ map fn set =
 
 {-| Only keep elements that pass the given test.
 
+    import AVL.Set as Set
 
     numbers : Set Int
     numbers =
@@ -298,7 +295,7 @@ map fn set =
     positives =
         Set.filter (\x -> x > 0) numbers
 
-    -- positives == [ 0, 1, 2 ]
+    Set.toList positives --> [ 1, 2 ]
 
 -}
 filter : (key -> Bool) -> Set key -> Set key
