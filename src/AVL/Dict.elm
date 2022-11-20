@@ -188,7 +188,11 @@ fromList =
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
 
-    Dict.keys (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ 0, 1 ]
+    import AVL.Dict as Dict
+
+    Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]
+        |> Dict.keys
+    --> [ 0, 1 ]
 
 -}
 keys : Dict key value -> List key
@@ -198,7 +202,11 @@ keys dict =
 
 {-| Get all of the values in a dictionary, in the order of their keys.
 
-    Dict.values (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ "Alice", "Bob" ]
+    import AVL.Dict as Dict
+
+    Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]
+        |> Dict.values
+    --> [ "Alice", "Bob" ]
 
 -}
 values : Dict key value -> List value
@@ -208,7 +216,11 @@ values dict =
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 
-    Dict.toList (Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]) == [ ( 0, "Alice" ), ( 1, "Bob" ) ]
+    import AVL.Dict as Dict
+
+    Dict.fromList [ ( 1, "Bob" ), ( 0, "Alice" ) ]
+        |> Dict.toList
+    --> [ ( 0, "Alice" ), ( 1, "Bob" ) ]
 
 -}
 toList : Dict key value -> List ( key, value )
@@ -311,12 +323,20 @@ member key dict =
 {-| Get the value associated with a key. If the key is not found, return Nothing.
 This is useful when you are not sure if a key will be in the dictionary.
 
+    import AVL.Dict as Dict exposing (Dict)
+
+    type Animal
+        = Cat
+        | Mouse
+        | Dog
+
+    animals : Dict String Animal
     animals =
         Dict.fromList [ ( "Tom", Cat ), ( "Jerry", Mouse ) ]
 
-    Dict.get "Tom" animals == Just Cat
-    Dict.get "Jerry" animals == Just Mouse
-    Dict.get "Spike" animals == Nothing
+    Dict.get "Tom" animals --> Just Cat
+    Dict.get "Jerry" animals --> Just Mouse
+    Dict.get "Spike" animals --> Nothing
 
 -}
 get : key -> Dict key value -> Maybe value
@@ -326,7 +346,7 @@ get key (Internal.AVLDict comparator _ root) =
 
 {-| Get the key-value pair associated with minimum key. If Dict is empty return Nothing.
 
-    import AVL.Dict as Dict exposing (Dict)
+    import AVL.Dict as Dict
 
     type alias User =
         { name : String
@@ -334,15 +354,13 @@ get key (Internal.AVLDict comparator _ root) =
         , height : Float
         }
 
-    users : Dict String User
-    users =
-        Dict.fromList
-            [ ( "Bob", User "Bob" 19 1.82 )
-            , ( "Alice", User "Alice" 28 1.65 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
-            ]
-
-    Dict.minimum users == Just ( "Alice", User "Alice" 28 1.65 )
+    Dict.fromList
+        [ ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+        , ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+        , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
+        ]
+        |> Dict.minimum
+    --> Just ( "Alice", User "Alice" 28 1.65 )
 
 -}
 minimum : Dict key value -> Maybe ( key, value )
@@ -352,7 +370,7 @@ minimum (Internal.AVLDict _ _ root) =
 
 {-| Get the key-value pair associated with maximum key. If Dict is empty return Nothing.
 
-    import AVL.Dict as Dict exposing (Dict)
+    import AVL.Dict as Dict
 
     type alias User =
         { name : String
@@ -360,15 +378,13 @@ minimum (Internal.AVLDict _ _ root) =
         , height : Float
         }
 
-    users : Dict String User
-    users =
-        Dict.fromList
-            [ ( "Bob", User "Bob" 19 1.82 )
-            , ( "Alice", User "Alice" 28 1.65 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
-            ]
-
-    Dict.maximum users == Just ( "Chuck", User "Chuck" 33 1.75 )
+    Dict.fromList
+        [ ( "Bob", { name = "Bob", age = 19, height = 1.82 } )
+        , ( "Alice", { name = "Alice", age = 28, height = 1.65 } )
+        , ( "Chuck", { name = "Chuck", age = 33, height = 1.75 } )
+        ]
+        |> Dict.maximum
+    --> Just ( "Chuck", User "Chuck" 33 1.75 )
 
 -}
 maximum : Dict key value -> Maybe ( key, value )

@@ -4,6 +4,7 @@
   "description": "AVL dict Elm",
   "main": "index.js",
   "scripts": {
+    "pretest": "elm-verify-examples",
     "test": "elm-test --compiler ./node_modules/.bin/elm"
   },
   "repository": {
@@ -27,6 +28,7 @@
     "elm": "^0.19.1-5",
     "elm-analyse": "^0.16.5",
     "elm-format": "^0.8.5",
-    "elm-test": "^0.19.1-revision2"
+    "elm-test": "^0.19.1-revision2",
+    "elm-verify-examples": "^5.2.0"
   }
 }
