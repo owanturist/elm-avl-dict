@@ -6,7 +6,7 @@ An implementation of easy to understand AVL algorithm.
 The basic idea is to keep both sub-trees of a node almost the same height.
 Almost means that heights difference must be not more that 1.
 As soon as this rule is violated rebalancing happens.
-It provides more strictly balance than 
+It provides more strictly balance than
 [red-black-tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) implementation.
 
 ```bash
@@ -29,6 +29,14 @@ compareID (ID x) (ID y) =
     compare x y
 
 
+type alias User =
+    { id : ID
+    , name : String
+    , age : Int
+    , height : Float
+    }
+
+
 users : Dict ID User
 users =
     Dict.fromListWith compareID
@@ -38,26 +46,20 @@ users =
         ]
 
 
+Dict.get (ID 0) users
+--> Just { id = ID 0, name = "Alice", age = 28, height = 1.65 }
+
+
 userIDs : Set ID
 userIDs =
     Set.fromListWith compareID [ ID 0, ID 1, ID 2 ]
 
 
-alice : Maybe User
-alice =
-    Dict.get (ID 0) users
-
-
-type alias User =
-    { id : ID
-    , name : String
-    , age : Int
-    , height : Float
-    }
+Set.member (ID 3) userIDs --> False
 
 ```
 
-## Performance 
+## Performance
 
 Time complexity of basic operations is the same (`O(log n)`) as in
 [`Core.Dict`](https://package.elm-lang.org/packages/elm/core/latest/Dict)
