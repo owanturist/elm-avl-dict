@@ -226,7 +226,7 @@ clear (Internal.AVLSet comparator _ _) =
 -}
 isEmpty : Set key -> Bool
 isEmpty set =
-    size set /= 0
+    size set == 0
 
 
 {-| Determine the number of elements in a set.
